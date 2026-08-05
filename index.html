@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UniPop Local Display</title>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body class="display-page">
+  <main class="display-shell">
+    <section class="course-visual" id="courseVisual">
+      <img id="courseImage" alt="Cours UniPop" />
+      <div class="availability" id="availability">PLACES<br>DISPONIBLES</div>
+      <div class="brandbar">
+        <div class="brand">UniPop</div>
+        <div class="brand-sub">Apprendre. Découvrir. Rencontrer.</div>
+      </div>
+    </section>
+
+    <section class="course-info">
+      <div class="eyebrow">COURS PRÈS DE CHEZ VOUS</div>
+      <h1 id="courseTitle">Yoga</h1>
+      <h2 id="courseSubtitle">Bien-être et équilibre</h2>
+
+      <div class="meta-grid">
+        <div>📅 <span id="courseDate"></span></div>
+        <div>🕒 <span id="courseTime"></span></div>
+        <div>📍 <span id="coursePlace"></span></div>
+        <div>👤 <span id="courseTrainer"></span></div>
+      </div>
+
+      <div class="qr-wrap">
+        <img id="qrImage" alt="QR Code" />
+        <div class="scan">Scannez-moi !</div>
+      </div>
+
+      <button id="printBtn" class="print-btn" type="button">
+        <span class="print-icon">🖨</span>
+        <span>Imprimer le flyer</span>
+      </button>
+      <div id="printStatus" class="print-status" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <aside class="debug-strip">
+    <span>Mode démo local</span>
+    <a href="admin.html">Dashboard admin</a>
+  </aside>
+
+  <script src="assets/config.js"></script>
+  <script src="assets/storage.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
