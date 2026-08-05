@@ -1,30 +1,5 @@
-<!doctype html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Flyer UniPop</title>
-  <link rel="stylesheet" href="assets/style.css" />
-</head>
-<body class="flyer-page">
-  <article class="flyer" id="flyer">
-    <img id="flyerImage" class="flyer-image" alt="Cours" />
-    <div class="flyer-body">
-      <div class="eyebrow">COURS PRÈS DE CHEZ VOUS</div>
-      <h1 id="flyerTitle"></h1>
-      <h2 id="flyerSubtitle"></h2>
-      <div class="flyer-meta" id="flyerMeta"></div>
-      <div class="flyer-bottom">
-        <div>
-          <div class="brand dark">UniPop</div>
-          <div class="brand-sub dark">Apprendre. Découvrir. Rencontrer.</div>
-        </div>
-        <img id="flyerQr" class="flyer-qr" alt="QR Code" />
-      </div>
-    </div>
-  </article>
-  <script src="assets/config.js"></script>
-  <script src="assets/storage.js"></script>
-  <script src="assets/flyer.js"></script>
-</body>
-</html>
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Flyer UniPop</title><style>
+@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#0b102c;background:#ddd}.sheet{width:210mm;height:297mm;margin:auto;background:#fff;position:relative;overflow:hidden}.top{padding:18mm 18mm 8mm}.ey{color:#a22696;font-size:13pt;font-weight:800}.dots{position:absolute;right:18mm;top:17mm;display:flex;gap:4mm}.dots i{width:5mm;height:5mm;border-radius:50%;background:#9a27ba}.dots i:nth-child(2){background:#d22b8f}.dots i:nth-child(3){background:#f4a17d}h1{font-size:38pt;margin:10mm 0 1mm;letter-spacing:-1.3mm}.sub{font-size:18pt}.grid{display:grid;grid-template-columns:1.25fr .75fr;gap:10mm;align-items:center;margin-top:12mm}.meta{font-size:13.5pt;line-height:2.15}.qr{text-align:center}.qr img{width:50mm;height:50mm;border:2px solid #111528;border-radius:4mm;padding:3mm}.scan{font-family:cursive;font-style:italic;font-size:16pt;transform:rotate(-3deg);margin-top:2mm}.hero{height:92mm;display:grid;grid-template-columns:1.35fr .65fr}.hero img{width:100%;height:100%;object-fit:cover}.desc{background:linear-gradient(145deg,#582068,#892982);color:white;padding:12mm 9mm;font-size:11pt;line-height:1.45}.pill{display:inline-grid;place-items:center;width:36mm;height:36mm;border-radius:50%;background:rgba(255,255,255,.14);font-weight:800;text-align:center;margin-bottom:8mm}.brand{position:absolute;left:0;right:0;bottom:0;height:27mm;background:#08102f;color:white;padding:6mm 18mm;display:flex;align-items:center;justify-content:space-between}.brand strong{font-size:23pt}.brand span{font-size:9.5pt}@media print{body{background:white}.sheet{margin:0}}
+</style></head><body><main class="sheet"><div class="dots"><i></i><i></i><i></i></div><section class="top"><div class="ey">COURS PRÈS DE CHEZ VOUS</div><h1 id="t"></h1><div class="sub" id="s"></div><div class="grid"><div class="meta"><div>▦ &nbsp;<span id="d"></span></div><div>◷ &nbsp;<span id="tm"></span></div><div>⌖ &nbsp;<span id="p"></span></div><div>♙ &nbsp;<span id="tr"></span></div></div><div class="qr"><img id="q"><div class="scan">Scannez-moi !</div></div></div></section><section class="hero"><img id="im"><div class="desc"><div class="pill">PLACES<br>DISPONIBLES</div><h3>DESCRIPTION</h3><p>Découvrez ce cours UniPop et retrouvez toutes les informations pratiques en scannant le QR code.</p></div></section><footer class="brand"><div><strong>UniPop</strong><br><span>Apprendre. Découvrir. Rencontrer.</span></div><span>www.unipop.lu</span></footer></main><script>
+const c=JSON.parse(localStorage.getItem('unipop-print-course')||'{}');const $=x=>document.getElementById(x);$('t').textContent=c.title||'Cours UniPop';$('s').textContent=c.subtitle||'';$('d').textContent=c.date||'';$('tm').textContent=c.time||'';$('p').textContent=c.place||'';$('tr').textContent=c.trainer||'';$('im').src=c.image||'assets/images/course-placeholder.svg';$('q').src='https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=0&data='+encodeURIComponent(c.url||'https://www.unipop.lu/');if(new URLSearchParams(location.search).get('autoprint')==='1'){setTimeout(()=>window.print(),900)}
+</script></body></html>

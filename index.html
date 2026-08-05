@@ -1,51 +1,58 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>UniPop Local Display</title>
-  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/style.css">
 </head>
 <body class="display-page">
-  <main class="display-shell">
-    <section class="course-visual" id="courseVisual">
-      <img id="courseImage" alt="Cours UniPop" />
-      <div class="availability" id="availability">PLACES<br>DISPONIBLES</div>
+  <main class="display-shell" aria-live="polite">
+    <section class="course-visual">
+      <img id="courseImage" class="course-image" src="assets/images/course-placeholder.svg" alt="Cours UniPop">
+      <div id="availability" class="availability">PLACES<br>DISPONIBLES</div>
       <div class="brandbar">
-        <div class="brand">UniPop</div>
+        <div class="unipop-wordmark">UniPop<span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></div>
         <div class="brand-sub">Apprendre. Découvrir. Rencontrer.</div>
       </div>
     </section>
 
     <section class="course-info">
-      <div class="eyebrow">COURS PRÈS DE CHEZ VOUS</div>
-      <h1 id="courseTitle">Yoga</h1>
-      <h2 id="courseSubtitle">Bien-être et équilibre</h2>
+      <div class="top-dots"><i></i><i></i><i></i></div>
+      <div class="content-wrap">
+        <div class="eyebrow"><span></span>COURS PRÈS DE CHEZ VOUS</div>
+        <h1 id="courseTitle">YOGA</h1>
+        <h2 id="courseSubtitle">Bien-être et équilibre</h2>
 
-      <div class="meta-grid">
-        <div>📅 <span id="courseDate"></span></div>
-        <div>🕒 <span id="courseTime"></span></div>
-        <div>📍 <span id="coursePlace"></span></div>
-        <div>👤 <span id="courseTrainer"></span></div>
+        <div class="info-layout">
+          <div class="meta-grid">
+            <div class="meta-row"><span class="meta-icon">▦</span><span id="courseDate"></span></div>
+            <div class="meta-row"><span class="meta-icon">◷</span><span id="courseTime"></span></div>
+            <div class="meta-row"><span class="meta-icon">⌖</span><span id="coursePlace"></span></div>
+            <div class="meta-row"><span class="meta-icon">♙</span><span id="courseTrainer"></span></div>
+          </div>
+
+          <div class="qr-wrap">
+            <div class="qr-frame"><img id="qrImage" alt="QR Code du cours"></div>
+            <div class="scan-arrow">↗</div>
+            <div class="scan">Scannez-moi !</div>
+          </div>
+        </div>
       </div>
 
-      <div class="qr-wrap">
-        <img id="qrImage" alt="QR Code" />
-        <div class="scan">Scannez-moi !</div>
-      </div>
-
-      <button id="printBtn" class="print-btn" type="button">
-        <span class="print-icon">🖨</span>
-        <span>Imprimer le flyer</span>
+      <button id="printBtn" class="print-strip" type="button" aria-label="Imprimer le flyer du cours affiché">
+        <span class="print-small-icon">▣</span>
+        <span class="print-copy">Appuyez sur le bouton pour imprimer le flyer de ce cours</span>
+        <span class="print-circle">▰</span>
       </button>
-      <div id="printStatus" class="print-status" aria-live="polite"></div>
+      <div id="printStatus" class="toast" role="status"></div>
     </section>
   </main>
 
-  <aside class="debug-strip">
+  <div class="demo-nav">
     <span>Mode démo local</span>
     <a href="admin.html">Dashboard admin</a>
-  </aside>
+  </div>
 
   <script src="assets/config.js"></script>
   <script src="assets/storage.js"></script>
