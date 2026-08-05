@@ -7,55 +7,49 @@
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body class="display-page">
-  <main class="display-shell" aria-live="polite">
-    <section class="course-visual">
-      <img id="courseImage" class="course-image" src="assets/images/course-placeholder.svg" alt="Cours UniPop">
-      <div id="availability" class="availability">PLACES<br>DISPONIBLES</div>
-      <div class="brandbar">
-        <div class="unipop-wordmark">UniPop<span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></div>
-        <div class="brand-sub">Apprendre. Découvrir. Rencontrer.</div>
-      </div>
-    </section>
+<main class="screen" aria-live="polite">
+  <section class="photo-panel">
+    <img id="courseImage" src="assets/images/yoga-demo.jpg" alt="">
+    <div id="availability" class="availability">PLACES<br>DISPONIBLES</div>
+    <footer class="brand">
+      <div class="logo">UniPop<span class="logo-dots"><b></b><b></b><b></b></span></div>
+      <div class="claim">Apprendre. Découvrir. Rencontrer.</div>
+    </footer>
+  </section>
 
-    <section class="course-info">
-      <div class="top-dots"><i></i><i></i><i></i></div>
-      <div class="content-wrap">
-        <div class="eyebrow"><span></span>COURS PRÈS DE CHEZ VOUS</div>
-        <h1 id="courseTitle">YOGA</h1>
-        <h2 id="courseSubtitle">Bien-être et équilibre</h2>
+  <section class="info-panel">
+    <div class="dots"><i></i><i></i><i></i></div>
+    <div class="course-content">
+      <div class="kicker"><span></span>COURS PRÈS DE CHEZ VOUS</div>
+      <h1 id="courseTitle">YOGA</h1>
+      <h2 id="courseSubtitle">Bien-être et équilibre</h2>
 
-        <div class="info-layout">
-          <div class="meta-grid">
-            <div class="meta-row"><span class="meta-icon">▦</span><span id="courseDate"></span></div>
-            <div class="meta-row"><span class="meta-icon">◷</span><span id="courseTime"></span></div>
-            <div class="meta-row"><span class="meta-icon">⌖</span><span id="coursePlace"></span></div>
-            <div class="meta-row"><span class="meta-icon">♙</span><span id="courseTrainer"></span></div>
-          </div>
-
-          <div class="qr-wrap">
-            <div class="qr-frame"><img id="qrImage" alt="QR Code du cours"></div>
-            <div class="scan-arrow">↗</div>
-            <div class="scan">Scannez-moi !</div>
-          </div>
+      <div class="lower">
+        <div class="meta">
+          <div><span class="ico">▦</span><span id="courseDate">14 octobre 2026</span></div>
+          <div><span class="ico clock">◷</span><span id="courseTime">18h30 – 20h00</span></div>
+          <div><span class="ico pin">⌖</span><span id="coursePlace">Centre culturel, Ettelbruck</span></div>
+          <div><span class="ico person">♙</span><span id="courseTrainer">Laura Müller</span></div>
+        </div>
+        <div class="qr-block">
+          <div class="qr-box"><img id="qrImage" alt="QR code"></div>
+          <div class="arrow">↗</div>
+          <div class="scan">Scannez-moi !</div>
         </div>
       </div>
+    </div>
 
-      <button id="printBtn" class="print-strip" type="button" aria-label="Imprimer le flyer du cours affiché">
-        <span class="print-small-icon">▣</span>
-        <span class="print-copy">Appuyez sur le bouton pour imprimer le flyer de ce cours</span>
-        <span class="print-circle">▰</span>
-      </button>
-      <div id="printStatus" class="toast" role="status"></div>
-    </section>
-  </main>
-
-  <div class="demo-nav">
-    <span>Mode démo local</span>
-    <a href="admin.html">Dashboard admin</a>
-  </div>
-
-  <script src="assets/config.js"></script>
-  <script src="assets/storage.js"></script>
-  <script src="assets/app.js"></script>
+    <button id="printBtn" class="printbar" type="button">
+      <span class="small-printer">▣</span>
+      <span id="printLabel">Appuyez sur le bouton pour imprimer le flyer de ce cours</span>
+      <span class="printer-circle">▰</span>
+    </button>
+    <div id="printStatus" class="toast" role="status"></div>
+  </section>
+</main>
+<div class="demo-nav"><span>Mode démo local</span><a href="admin.html">Dashboard admin</a></div>
+<script src="assets/config.js"></script>
+<script src="assets/storage.js"></script>
+<script src="assets/app.js"></script>
 </body>
 </html>
