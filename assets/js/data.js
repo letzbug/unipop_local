@@ -1,1 +1,81 @@
-(function(){const C=UNIPOP_CONFIG,first=(o,ks,d='')=>{for(const k of ks){let v=o;for(const p of k.split('.')){if(v==null)break;v=v[p]}if(v!==undefined&&v!==null&&String(v).trim()!=='')return v}return d},txt=v=>Array.isArray(v)?v.map(x=>typeof x==='string'?x:(x.nom||x.name||x.libelle||'')).filter(Boolean).join(', '):(v&&typeof v==='object'?(v.nom||v.name||v.libelle||''):(v||'')),fd=v=>{if(!v)return'';const d=new Date(v);return isNaN(d)?String(v):new Intl.DateTimeFormat('fr-LU',{day:'2-digit',month:'long',year:'numeric'}).format(d)};function normalize(r){const org=first(r,['organisateur.code','organizer.code','organisateurCode','organizerCode'],'');const id=first(r,['coursId','courseId','id','code','coursCode'],Math.random().toString(36).slice(2));return{id:String(id),code:String(first(r,['coursCode','courseCode','code','reference','numero'],id)),title:String(first(r,['intitule','title','nom','libelle','coursNom'],'Cours UniPop')),subtitle:String(first(r,['sousTitre','subtitle','matiereNom','categorieNom'],'')),description:String(first(r,['description','texte','descriptionLongue','contenu','presentation','objectifs'],'')),date:fd(first(r,['dateDebut','startDate','date','premiereDate'],'')),dateEnd:fd(first(r,['dateFin','endDate'],'')),time:txt(first(r,['horaire','horaires','time','plageHoraire'],'')),place:String(txt(first(r,['adresseCours.nom','adresseCours','lieu.nom','lieu','location.name','location'],''))),trainer:String(txt(first(r,['enseignants','formateurs','trainer','intervenants'],'UniPop'))),url:String(first(r,['url','courseUrl','coursUrl','lien','lienInscription','detailUrl'],C.qrBaseFallback)),_org:org,_raw:r}}async function loadCourses(){if(!C.jsonUrl)return C.demoCourses.map(x=>({...x}));try{const q=await fetch(C.jsonUrl,{cache:'no-store'});if(!q.ok)throw Error('HTTP '+q.status);const d=await q.json();let l=Array.isArray(d)?d:(d.cours||d.courses||d.items||d.data||[]);l=l.map(normalize);if(C.organiserCode){const f=l.filter(x=>!x._org||x._org===C.organiserCode);if(f.length)l=f}return l}catch(e){console.warn('JSON indisponible, mode démo',e);return C.demoCourses.map(x=>({...x}))}}window.UniData={loadCourses,normalize}})();
+(function(){
+  const cfg=window.UNIPOP_CONFIG;
+  const cleanHtml=s=>String(s||'').replace(/<br\s*\/?>/gi,' ').replace(/<[^>]*>/g,' ').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/\s+/g,' ').trim();
+  function dateFR(v){
+    if(!v) return '';
+    const m=String(v).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    let d=m?new Date(+m[3],+m[2]-1,+m[1]):new Date(v);
+    if(isNaN(d)) return String(v);
+    return new Intl.DateTimeFormat('fr-LU',{day:'2-digit',month:'long',year:'numeric'}).format(d);
+  }
+  function trainers(v){
+    if(!Array.isArray(v)) return '';
+    return v.map(x=>[x.prenom,x.nom].filter(Boolean).join(' ')).filter(Boolean).join(', ');
+  }
+  function place(a){
+    if(!a) return '';
+    if(typeof a==='string') return a;
+    return [a.nom,a.localite].filter(Boolean).join(', ');
+  }
+  function normalize(x){
+    return {
+      id:String(x.coursId||x.id||x.coursCode||''),
+      code:String(x.coursCode||x.coursId||x.id||''),
+      title:String(x.intitule||''),
+      subtitle:String(x.matiereNom||x.categorieNom||''),
+      description:cleanHtml(x.description||''),
+      info:cleanHtml(x.renseignements||''),
+      date:dateFR(x.dateDebut),
+      dateEnd:dateFR(x.dateFin),
+      time:String(x.horairePrevu||((x.horaires||[]).map(h=>[h.jour,h.heure,h.duree].filter(Boolean).join(' ')).join(' · '))||''),
+      place:place(x.adresseCours),
+      address:x.adresseCours||{},
+      trainer:trainers(x.enseignants)||'UniPop',
+      url:String(x.onlineRegistrationUrl||cfg.qrFallback),
+      places:Number.isFinite(x.nbPlaces)?x.nbPlaces:null,
+      registered:Number.isFinite(x.nbInscrits)?x.nbInscrits:null,
+      level:String(x.niveau||''),
+      language:String(x.langueCoursNom||''),
+      category:String(x.categorieNom||''),
+      subject:String(x.matiereNom||''),
+      organiser:String(x.organisateur?.code||''),
+      raw:x
+    };
+  }
+  async function fetchOne(url){
+    const r=await fetch(url,{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    if(!Array.isArray(data)) throw new Error('JSON root is not an array');
+    return data;
+  }
+  async function loadCourses(){
+    let lastErr;
+    for(const url of cfg.jsonUrls){
+      try{
+        const raw=await fetchOne(url);
+        const courses=raw.filter(x=>x.organisateur?.code===cfg.organiserCode).map(normalize);
+        if(courses.length) return courses;
+      }catch(e){lastErr=e; console.warn('trainings.json failed:',url,e)}
+    }
+    throw lastErr||new Error('trainings.json konnte nicht geladen werden');
+  }
+  function shorten(text,max=245){
+    const t=cleanHtml(text);
+    if(t.length<=max) return t;
+    const sentences=t.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
+    let out='';
+    for(const s0 of sentences){
+      const s=s0.trim();
+      if(!s) continue;
+      const candidate=(out?out+' ':'')+s;
+      if(candidate.length>max) break;
+      out=candidate;
+    }
+    if(out.length>=Math.min(90,max*.45)) return out;
+    let cut=t.slice(0,max-1);
+    cut=cut.replace(/\s+\S*$/,'').replace(/[,:;\-\s]+$/,'');
+    return cut+'…';
+  }
+  window.UniData={loadCourses,normalize,shorten,cleanHtml};
+})();

@@ -1,1 +1,17 @@
-window.UNIPOP_CONFIG={appName:'UniPop Display Builder',jsonUrl:'',organiserCode:'UNIPOP',defaultScreen:'ettelbruck-01',screens:[{id:'ettelbruck-01',name:'Ettelbruck – Écran 1',location:'Ettelbruck',enabled:true},{id:'nordstad-01',name:'Nordstad – Écran 1',location:'Nordstad',enabled:true}],printCooldownSeconds:15,maxPrintsPerHour:20,qrBaseFallback:'https://www.unipop.lu/',demoCourses:[{id:'UNIPOP-DEMO-001',code:'UNIPOP-2026-001',title:'Cuisine italienne',subtitle:'Saveurs et découvertes',description:'Découvrez les saveurs de la cuisine italienne et apprenez des recettes simples et authentiques dans une ambiance conviviale.',date:'21 octobre 2026',time:'18h00 – 21h00',place:'Espace cuisine, Nordstad',trainer:'UniPop',url:'https://www.unipop.lu/',image:''},{id:'UNIPOP-DEMO-002',code:'UNIPOP-2026-002',title:'Yoga',subtitle:'Bien-être et équilibre',description:'Un cours accessible à tous pour renforcer le corps, apaiser le mental et retrouver l’équilibre au quotidien.',date:'14 octobre 2026',time:'18h30 – 20h00',place:'Centre culturel, Ettelbruck',trainer:'UniPop',url:'https://www.unipop.lu/',image:''}]};
+window.UNIPOP_CONFIG = {
+  appName: 'UniPop Display Builder',
+  jsonUrls: [
+    'https://raw.githubusercontent.com/letzbug/signage/main/data/trainings.json',
+    'https://raw.githubusercontent.com/letzbug/signage/bd15a5eddb1f8b2d7201c0db854fe107c97cd09e/data/trainings.json'
+  ],
+  organiserCode: 'UNIPOP',
+  defaultScreen: 'commune-01',
+  screens: [
+    {id:'commune-01', name:'Commune – Écran 1', location:'Commune', enabled:true},
+    {id:'nouveau-site-01', name:'Nouveau site – Écran 1', location:'Nouveau site', enabled:true}
+  ],
+  slideSeconds: 14,
+  printCooldownSeconds: 15,
+  maxPrintsPerHour: 20,
+  qrFallback: 'https://www.unipop.lu/'
+};
