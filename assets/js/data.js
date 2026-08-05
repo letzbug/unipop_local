@@ -43,11 +43,21 @@
     };
   }
   async function fetchOne(url){
-    const r=await fetch(url,{cache:'no-store'});
+    const r=await fetch(url,{
+      cache:'no-store',
+      headers:{'Accept':'application/json,text/plain,*/*'}
+    });
     if(!r.ok) throw new Error('HTTP '+r.status);
-    const data=await r.json();
-    if(!Array.isArray(data)) throw new Error('JSON root is not an array');
-    return data;
+    const text=await r.text();
+    let data;
+    try{ data=JSON.parse(text); }
+    catch(e){ throw new Error('Antwort ist kein gültiges JSON'); }
+    if(Array.isArray(data)) return data;
+    if(Array.isArray(data.cours)) return data.cours;
+    if(Array.isArray(data.courses)) return data.courses;
+    if(Array.isArray(data.items)) return data.items;
+    if(Array.isArray(data.data)) return data.data;
+    throw new Error('Unbekannte JSON-Struktur');
   }
   async function loadCourses(){
     let lastErr;
@@ -55,7 +65,10 @@
       try{
         const raw=await fetchOne(url);
         const courses=raw.filter(x=>x.organisateur?.code===cfg.organiserCode).map(normalize);
-        if(courses.length) return courses;
+        if(courses.length){
+          window.UNIPOP_JSON_SOURCE=url;
+          return courses;
+        }
       }catch(e){lastErr=e; console.warn('trainings.json failed:',url,e)}
     }
     throw lastErr||new Error('trainings.json konnte nicht geladen werden');

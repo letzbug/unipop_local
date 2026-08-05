@@ -1,9 +1,16 @@
 window.UNIPOP_CONFIG = {
   appName: 'UniPop Display Builder',
+
+  // Reihenfolge der Quellen:
+  // 1) GitHub Pages des bestehenden Signage-Repositories (gleiche Origin auf letzbug.github.io)
+  // 2) jsDelivr CDN
+  // 3) Raw GitHub als letzter Fallback
   jsonUrls: [
-    'https://raw.githubusercontent.com/letzbug/signage/main/data/trainings.json',
-    'https://raw.githubusercontent.com/letzbug/signage/bd15a5eddb1f8b2d7201c0db854fe107c97cd09e/data/trainings.json'
+    'https://letzbug.github.io/signage/data/trainings.json',
+    'https://cdn.jsdelivr.net/gh/letzbug/signage@main/data/trainings.json',
+    'https://raw.githubusercontent.com/letzbug/signage/main/data/trainings.json'
   ],
+
   organiserCode: 'UNIPOP',
   defaultScreen: 'commune-01',
   screens: [
