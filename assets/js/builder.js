@@ -231,16 +231,33 @@
    const cleanItems=playlist.map(it=>({...it,image:''}));
    return {name:$('campaignName').value.trim()||'UniPop Auswahl',items:cleanItems,duration:Number($('duration').value)||14,showQR:$('showQR').checked,showPrint:$('showPrint').checked};
  }
- function editingPayload(){
-   if(!selected)return {name:'Vorschau',items:[],duration:Number($('duration').value)||14,showQR:$('showQR').checked,showPrint:$('showPrint').checked};
+ async function editingPayload(){
+   if(!selected){
+     return {
+       name:'Vorschau',
+       items:[],
+       duration:Number($('duration').value)||14,
+       showQR:$('showQR').checked,
+       showPrint:$('showPrint').checked
+     };
+   }
+
    const item=currentItem();
-   item.image='';
-   return {name:'Vorschau',items:[item],duration:Number($('duration').value)||14,showQR:$('showQR').checked,showPrint:$('showPrint').checked};
+   item.image=await UniImageStore.get(selected.id)||'';
+
+   return {
+     name:'Vorschau',
+     items:[item],
+     duration:Number($('duration').value)||14,
+     showQR:$('showQR').checked,
+     showPrint:$('showPrint').checked
+   };
  }
- function updateEditingPreview(){
+ async function updateEditingPreview(){
    if(!selected)return;
    try{
-     sessionStorage.setItem('unipop_preview_assignment',JSON.stringify(editingPayload()));
+     const previewPayload=await editingPayload();
+     sessionStorage.setItem('unipop_preview_assignment',JSON.stringify(previewPayload));
      $('preview').src='display-preview.html?t='+Date.now();
    }catch(e){
      console.error('Preview storage error',e);
@@ -266,36 +283,47 @@
    $('imageInput').value='';
  };
 
+ $('imageInput').onclick=()=>{
+   // Damit auch dieselbe Datei erneut gewählt werden kann.
+   $('imageInput').value='';
+ };
+
  $('imageInput').onchange=async e=>{
    const f=e.target.files?.[0];
-   if(!f||!selected)return;
+   if(!f || !selected) return;
 
    const courseId=selected.id;
-   const prev=$('imgPrev').src;
 
    try{
-     $('imgPrev').style.opacity='.45';
-     const dataUrl=await compressImage(f);
+     $('imgPrev').style.opacity='.5';
 
-     // Testweise speichern; bei vollem localStorage klare Fehlermeldung.
-     try{
-       await UniImageStore.set(courseId,dataUrl);
-     }catch(storageErr){
-       throw new Error('Browser-Speicher für Bilder ist voll. Bitte ein altes Bild entfernen.');
+     // Bestehende Komprimierungsfunktion nutzen, falls vorhanden.
+     let dataUrl;
+     if(typeof compressImage==='function'){
+       dataUrl=await compressImage(f);
+     }else{
+       dataUrl=await new Promise((resolve,reject)=>{
+         const r=new FileReader();
+         r.onerror=()=>reject(r.error);
+         r.onload=()=>resolve(r.result);
+         r.readAsDataURL(f);
+       });
      }
+
+     await UniImageStore.set(courseId,dataUrl);
 
      if(selected && selected.id===courseId){
        $('imgPrev').src=dataUrl;
        $('imgPrev').style.opacity='1';
+
+       // WICHTIG: Preview sofort neu aufbauen.
        updateEditingPreview();
      }
    }catch(err){
      console.error(err);
      $('imgPrev').style.opacity='1';
-     if(prev)$('imgPrev').src=prev;
      alert('Bild konnte nicht übernommen werden: '+(err.message||err));
    }finally{
-     // Nach jedem Versuch wieder zurücksetzen.
      $('imageInput').value='';
    }
  };
