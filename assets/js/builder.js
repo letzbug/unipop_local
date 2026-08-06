@@ -32,6 +32,16 @@
  }
  function resizeTexts(){autoResize($('originalText'));autoResize($('displayText'))}
 
+ function setBuilderImagePreview(src){
+   const img=$('imgPrev');
+   if(!img)return;
+   img.onerror=()=>{
+     img.onerror=null;
+     img.src='assets/images/placeholder.svg';
+   };
+   img.src=src||'assets/images/placeholder.svg';
+ }
+
  let activeDisplayId=$('screenSelect').value||'';
 
  function clearDraft(){
@@ -57,7 +67,7 @@
    $('displayText').value=it.displayText||UniData.shorten(it.course.description||'',245);
    selected._remoteImageUrl=it.imageUrl||UniHybrid.getRemoteImageUrl(it.course.id)||'';
    const localImg=await UniImageStore.get(it.course.id)||'';
-   $('imgPrev').src=localImg||selected._remoteImageUrl||'assets/images/placeholder.svg';
+   setBuilderImagePreview(localImg||selected._remoteImageUrl||'assets/images/placeholder.svg');
    $('imageInput').value='';
    requestAnimationFrame(()=>requestAnimationFrame(resizeTexts));
  }
@@ -233,7 +243,7 @@
    $('originalText').value=selected.description;
    $('displayText').value=UniData.shorten(selected.description,245);
    selected._remoteImageUrl=selected._remoteImageUrl||UniHybrid.getRemoteImageUrl(selected.id)||'';
-   $('imgPrev').src=(await UniImageStore.get(selected.id))||selected._remoteImageUrl||'assets/images/placeholder.svg';
+   setBuilderImagePreview((await UniImageStore.get(selected.id))||selected._remoteImageUrl||'assets/images/placeholder.svg');
    // Wichtig: Datei-Input beim Kurswechsel zurücksetzen.
    // Sonst feuert "change" bei einem weiteren Upload je nach Browser nicht zuverlässig.
    $('imageInput').value='';
@@ -494,7 +504,7 @@
      }
 
      if(selected && selected.id===courseId){
-       $('imgPrev').src=dataUrl;
+       setBuilderImagePreview(dataUrl);
        $('imgPrev').style.opacity='1';
 
        // WICHTIG: Preview sofort neu aufbauen.
@@ -508,7 +518,7 @@
      $('imageInput').value='';
    }
  };
- $('removeImage').onclick=async()=>{if(!selected)return;await UniImageStore.remove(selected.id);$('imgPrev').src='assets/images/placeholder.svg';$('imgPrev').style.opacity='1';$('imageInput').value='';updateEditingPreview()};
+ $('removeImage').onclick=async()=>{if(!selected)return;await UniImageStore.remove(selected.id);setBuilderImagePreview('assets/images/placeholder.svg');$('imgPrev').style.opacity='1';$('imageInput').value='';updateEditingPreview()};
 
  $('addToPlaylist').onclick=async()=>{
    if(!selected)return;

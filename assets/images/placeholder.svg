@@ -1,1 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#37284b"/><stop offset="1" stop-color="#07102f"/></linearGradient></defs><rect width="1600" height="900" fill="url(#g)"/><circle cx="480" cy="380" r="160" fill="#ffffff12"/><circle cx="760" cy="520" r="220" fill="#ffffff0d"/><text x="80" y="800" fill="#fff" opacity=".75" font-family="Arial" font-size="52">Image de cours optionnelle</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#302544"/>
+      <stop offset="1" stop-color="#0D1C55"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" rx="28" fill="url(#g)"/>
+  <circle cx="300" cy="245" r="88" fill="#ffffff" opacity=".08"/>
+  <circle cx="480" cy="320" r="122" fill="#ffffff" opacity=".06"/>
+  <text x="64" y="610" font-family="Arial,Helvetica,sans-serif" font-size="32" fill="#ffffff" opacity=".9">
+    Image de cours optionnelle
+  </text>
+</svg>
