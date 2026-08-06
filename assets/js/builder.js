@@ -4,6 +4,13 @@
  let courses=[],selected=null,playlist=[];
 
  let displays=UniStore.getDisplays();
+ // Ensure the four standard locations always exist, without deleting user-created locations.
+ const standardDisplays=cfg.screens||[];
+ let displayListChanged=false;
+ standardDisplays.forEach(sd=>{
+   if(!displays.some(d=>d.id===sd.id)){displays.push({...sd});displayListChanged=true}
+ });
+ if(displayListChanged) UniStore.saveDisplays(displays);
  function refillDisplaySelect(){
    const sel=$('screenSelect'),current=sel.value;
    sel.innerHTML='';
