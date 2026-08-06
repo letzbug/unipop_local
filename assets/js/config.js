@@ -4,9 +4,7 @@ window.UNIPOP_CONFIG = {
   // Immer zuerst die aktuellste trainings.json aus dem main-Branch laden.
   // Der feste Commit ist nur Notfall-Fallback.
   jsonUrls: [
-    'https://raw.githubusercontent.com/letzbug/signage/main/data/trainings.json',
-    'https://cdn.jsdelivr.net/gh/letzbug/signage@main/data/trainings.json',
-    'https://raw.githubusercontent.com/letzbug/signage/bd15a5eddb1f8b2d7201c0db854fe107c97cd09e/data/trainings.json'
+    'https://raw.githubusercontent.com/letzbug/franks_magic/main/data/trainings.json'
   ],
 
   organiserCode: 'UNIPOP',
