@@ -16,7 +16,26 @@
    let image=it.imageUrl||it.image||UniHybrid.getRemoteImageUrl(c.id)||'';
    if(!image){
      image=await UniImageStore.get(c.id)||'';
-   } if(image){$('heroImg').src=image;$('heroImg').style.display='block';$('noImage').style.display='none'}else{$('heroImg').style.display='none';$('noImage').style.display='block'}
+   } 
+   const hero=$('heroImg');
+   if(image){
+     hero.style.display='none';
+     $('noImage').style.display='block';
+     hero.onload=()=>{
+       hero.style.display='block';
+       $('noImage').style.display='none';
+     };
+     hero.onerror=()=>{
+       hero.removeAttribute('src');
+       hero.style.display='none';
+       $('noImage').style.display='block';
+     };
+     hero.src=image;
+   }else{
+     hero.removeAttribute('src');
+     hero.style.display='none';
+     $('noImage').style.display='block';
+   }
    $('qrImg').src=currentQr;$('qrArea').style.display=assignment.showQR===false?'none':'block';$('printBar').style.display=assignment.showPrint===false?'none':'flex';
    requestAnimationFrame(()=>window.UniDisplayFit&&window.UniDisplayFit());
    UniHybrid.heartbeat(screenId,{courseCode:c.code,title:c.title,campaign:assignment.name||'',slide:i%assignment.items.length});
