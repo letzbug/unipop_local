@@ -1,3 +1,198 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UniPop Preview</title><link rel="stylesheet" href="assets/css/app.css"></head><body class="display-body"><main class="display-screen"><div id="noImage" class="no-image-bg"></div><img id="heroImg" class="hero-img" style="display:none"><div class="hero-overlay"></div><div class="display-logo"><img src="assets/images/unipop-logo.png" alt="UniPop"></div><section class="display-content"><div class="dkicker">COURS PRÈS DE CHEZ VOUS</div><div id="dTitle" class="dtitle"></div><div id="dSubtitle" class="dsubtitle"></div><div id="dDesc" class="ddesc"></div><div class="dmeta"><div><span class="ico">▦</span><span id="dDate"></span></div><div><span class="ico">◷</span><span id="dTime"></span></div><div><span class="ico">⌖</span><span id="dPlace"></span></div><div><span class="ico">♙</span><span id="dTrainer"></span></div><div id="dCode" class="dcode"></div></div></section><div class="avail">PLACES<br>DISPONIBLES</div><div id="qrArea" class="qr-area"><img id="qrImg"><div class="scan">Scannez-moi !</div></div><button id="printBar" class="printbar"><span class="print-icon" aria-hidden="true"><svg viewBox="0 0 64 64" focusable="false"><path d="M18 8h28v15H18z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><rect x="9" y="22" width="46" height="25" rx="5" fill="none" stroke="currentColor" stroke-width="4"/><path d="M18 39h28v17H18z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><circle cx="46" cy="31" r="2.5" fill="currentColor"/></svg></span><span>Appuyez sur le bouton pour imprimer le flyer de ce cours</span></button></main><script src="assets/js/config.js"></script><script src="assets/js/store.js"></script><script src="assets/js/image-store.js"></script><script src="assets/js/data.js"></script><script src="assets/js/fit.js"></script><script>
-(async()=>{const $=id=>document.getElementById(id),a=JSON.parse(sessionStorage.getItem('unipop_preview_assignment')||'null');let items=a?.items||[];if(!items.length){try{const c=(await UniData.loadCourses())[0];items=[{course:c,image:'',displayText:UniData.shorten(c.description,245)}]}catch(e){return}}let i=0;async function show(){const it=items[i],c=it.course;$('dTitle').textContent=c.title;$('dSubtitle').textContent=c.subtitle||c.subject||'';$('dDesc').textContent=it.displayText||'';$('dDate').textContent=c.date||'';$('dTime').textContent=c.time||'';$('dPlace').textContent=c.place||'';$('dTrainer').textContent=c.trainer||'UniPop';$('dCode').textContent='Code : '+c.code;let im=it.image||'';if(!im){try{im=await UniImageStore.get(c.id)||''}catch(e){console.error('Preview image load',e)}}if(im){$('heroImg').src=im;$('heroImg').style.display='block';$('noImage').style.display='none'}else{$('heroImg').style.display='none';$('noImage').style.display='block'}$('qrImg').src='https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=10&data='+encodeURIComponent(c.url||UNIPOP_CONFIG.qrFallback);$('qrArea').style.display=a?.showQR===false?'none':'block';$('printBar').style.display=a?.showPrint===false?'none':'flex';requestAnimationFrame(()=>window.UniDisplayFit&&window.UniDisplayFit())}await show();if(items.length>1)setInterval(async()=>{i=(i+1)%items.length;await show()},Math.max(5,Number(a?.duration)||14)*1000)})();
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UniPop Preview</title><link rel="stylesheet" href="assets/css/app.css"></head><body class="display-body"><main class="display-screen"><div id="noImage" class="no-image-bg"></div><img id="heroImg" class="hero-img" style="display:none"><div class="hero-overlay"></div><div class="display-logo"><img src="assets/images/unipop-logo.png" alt="UniPop"></div><section class="display-content"><div class="dkicker">COURS PRÈS DE CHEZ VOUS</div><div id="dTitle" class="dtitle"></div><div id="dSubtitle" class="dsubtitle"></div><div id="dDesc" class="ddesc"></div><div class="dmeta"><div><span class="ico">▦</span><span id="dDate"></span></div><div><span class="ico">◷</span><span id="dTime"></span></div><div><span class="ico">⌖</span><span id="dPlace"></span></div><div><span class="ico">♙</span><span id="dTrainer"></span></div><div id="dCode" class="dcode"></div></div></section><div class="avail">PLACES<br>DISPONIBLES</div><div id="qrArea" class="qr-area"><img id="qrImg"><div class="scan">Scannez-moi !</div></div><button id="printBar" class="printbar"><span class="print-icon" aria-hidden="true"><svg viewBox="0 0 64 64" focusable="false"><path d="M18 8h28v15H18z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><rect x="9" y="22" width="46" height="25" rx="5" fill="none" stroke="currentColor" stroke-width="4"/><path d="M18 39h28v17H18z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><circle cx="46" cy="31" r="2.5" fill="currentColor"/></svg></span><span>Appuyez sur le bouton pour imprimer le flyer de ce cours</span></button><div id="toast" class="display-toast"></div></main><script src="assets/js/config.js"></script><script src="assets/js/store.js"></script><script src="assets/js/image-store.js"></script><script src="assets/js/data.js"></script><script src="assets/js/fit.js"></script><script>
+(async()=>{
+  const $=id=>document.getElementById(id);
+  const a=JSON.parse(sessionStorage.getItem('unipop_preview_assignment')||'null');
+  let items=a?.items||[];
+
+  if(!items.length){
+    try{
+      const c=(await UniData.loadCourses())[0];
+      items=[{course:c,image:'',displayText:UniData.shorten(c.description,245)}];
+    }catch(e){return}
+  }
+
+  let i=0,current=null,currentQr='';
+
+  function qr(url){
+    return 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=10&data='+encodeURIComponent(url||UNIPOP_CONFIG.qrFallback);
+  }
+
+  async function show(){
+    const it=items[i],c=it.course;
+    current=it;
+    currentQr=qr(c.url);
+
+    $('dTitle').textContent=c.title||'';
+    $('dSubtitle').textContent=c.subtitle||c.subject||'';
+    $('dDesc').textContent=it.displayText||'';
+    $('dDate').textContent=c.date||'';
+    $('dTime').textContent=c.time||'';
+    $('dPlace').textContent=c.place||'';
+    $('dTrainer').textContent=c.trainer||'UniPop';
+    $('dCode').textContent='Code : '+(c.code||'—');
+
+    let im=it.image||'';
+    if(!im){
+      try{im=await UniImageStore.get(c.id)||''}
+      catch(e){console.error(e)}
+    }
+    if(im){
+      $('heroImg').src=im;
+      $('heroImg').style.display='block';
+      $('noImage').style.display='none';
+    }else{
+      $('heroImg').style.display='none';
+      $('noImage').style.display='block';
+    }
+
+    $('qrImg').src=currentQr;
+    $('qrArea').style.display=a?.showQR===false?'none':'block';
+    $('printBar').style.display=a?.showPrint===false?'none':'flex';
+    requestAnimationFrame(()=>window.UniDisplayFit&&window.UniDisplayFit());
+  }
+
+  function doPrint(){
+    if(a?.showPrint===false||!current)return;
+
+    const toast=$('toast');
+    const w=window.open('about:blank','unipop_preview_flyer','width=900,height=1000');
+
+    if(!w){
+      if(toast){
+        toast.textContent='Veuillez autoriser les fenêtres pop-up pour imprimer.';
+        toast.classList.add('show');
+        setTimeout(()=>toast.classList.remove('show'),2600);
+      }
+      return;
+    }
+
+    const c=current.course;
+
+    (async()=>{
+      try{
+        const image=await UniImageStore.get(c.id)||'';
+        const logoUrl=new URL('assets/images/unipop-logo.png',location.href).href;
+        const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({
+          '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        }[m]));
+
+        const title=esc(c.title||'');
+        const subtitle=esc(c.subtitle||c.subject||'');
+        const desc=esc(c.description||current.displayText||'');
+        const date=esc(c.date||'');
+        const time=esc(c.time||'');
+        const place=esc(c.place||'');
+        const trainer=esc(c.trainer||'UniPop');
+        const code=esc(c.code||'—');
+        const qrCode=esc(currentQr||'');
+        const photo=image ? `<img class="photo" src="${image}" alt="">` : `<div class="photo missing">UniPop</div>`;
+
+        const doc=`<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>${title}</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#fff;font-family:Arial,Helvetica,sans-serif;color:#151622}
+.page{width:210mm;height:297mm;position:relative;overflow:hidden;background:#fff}
+.top{height:55%;padding:14mm 15mm 8mm}
+.kicker{font-size:10.5pt;font-weight:800;letter-spacing:.04em;color:#0D1C55;margin-bottom:9mm}
+h1{font-size:33pt;line-height:1.02;letter-spacing:-.025em;text-transform:uppercase;color:#0D1C55;margin:0;max-width:150mm}
+h2{font-size:17pt;line-height:1.15;font-weight:400;margin:4mm 0 0}
+.info{display:grid;grid-template-columns:1fr 49mm;gap:10mm;align-items:end;margin-top:14mm}
+.meta{display:grid;gap:5mm;font-size:12pt}
+.meta-row{display:grid;grid-template-columns:10mm 1fr;align-items:center}
+.ico{color:#0D1C55;font-size:18pt}
+.code{font-size:9.5pt;color:#666;margin-top:1mm}
+.qr{text-align:center}
+.qr img{width:45mm;height:45mm;padding:2mm;border:1.1mm solid #0D1C55;border-radius:4mm;background:#fff}
+.scan{margin-top:2mm;font-family:"Segoe Print","Bradley Hand",cursive;font-style:italic;font-size:14pt;transform:rotate(-4deg);color:#0D1C55}
+.lower{height:36%;display:grid;grid-template-columns:60% 40%}
+.photo{width:100%;height:100%;object-fit:cover;display:block;background:#e9ebef}
+.photo.missing{display:grid;place-items:center;color:#0D1C55;font-size:28pt;font-weight:800}
+.descpanel{background:#0D1C55;color:#fff;padding:10mm 9mm 8mm}
+.badge{width:34mm;height:34mm;border-radius:50%;display:grid;place-items:center;text-align:center;background:#B6DEDF;color:#0D1C55;font-size:9.5pt;font-weight:800;line-height:1.2;margin-bottom:8mm}
+.descpanel h3{font-size:12pt;letter-spacing:.03em;margin:0 0 5mm}
+.desc{font-size:10.5pt;line-height:1.47}
+.footer{position:absolute;left:0;right:0;bottom:0;height:9%;background:#07102f;display:flex;align-items:center;padding:5mm 15mm}
+.footer img{height:16mm;width:auto;display:block}
+@page{size:A4 portrait;margin:0}
+@media print{html,body,.page{width:210mm;height:297mm}}
+</style>
+</head>
+<body>
+<div class="page">
+  <section class="top">
+    <div class="kicker">COURS PRÈS DE CHEZ VOUS</div>
+    <h1>${title}</h1>
+    <h2>${subtitle}</h2>
+    <div class="info">
+      <div class="meta">
+        <div class="meta-row"><span class="ico">▦</span><span>${date}</span></div>
+        <div class="meta-row"><span class="ico">◷</span><span>${time}</span></div>
+        <div class="meta-row"><span class="ico">⌖</span><span>${place}</span></div>
+        <div class="meta-row"><span class="ico">♙</span><span>${trainer}</span></div>
+        <div class="code">Code du cours : ${code}</div>
+      </div>
+      <div class="qr"><img src="${qrCode}" alt="QR"><div class="scan">Scannez-moi !</div></div>
+    </div>
+  </section>
+  <section class="lower">
+    ${photo}
+    <div class="descpanel">
+      <div class="badge">PLACES<br>DISPONIBLES</div>
+      <h3>DESCRIPTION</h3>
+      <div class="desc">${desc}</div>
+    </div>
+  </section>
+  <footer class="footer"><img src="${logoUrl}" alt="UniPop"></footer>
+</div>
+<script>
+(function(){
+  const imgs=[...document.images];
+  Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(r=>{img.onload=img.onerror=r})))
+    .then(()=>setTimeout(()=>{window.focus();window.print()},300));
+})();
+<\/script>
+</body>
+</html>`;
+
+        w.document.open();
+        w.document.write(doc);
+        w.document.close();
+
+        if(toast){
+          toast.textContent='Votre flyer est en cours d’impression…';
+          toast.classList.add('show');
+          setTimeout(()=>toast.classList.remove('show'),1800);
+        }
+      }catch(err){
+        console.error(err);
+        try{
+          w.document.open();
+          w.document.write('<p style="font-family:Arial;padding:30px">Erreur lors de la préparation du flyer.</p>');
+          w.document.close();
+        }catch(_){}
+      }
+    })();
+  }
+
+  await show();
+
+  if(items.length>1){
+    setInterval(async()=>{
+      i=(i+1)%items.length;
+      await show();
+    },Math.max(5,Number(a?.duration)||14)*1000);
+  }
+
+  $('printBar').onclick=doPrint;
+  addEventListener('keydown',e=>{
+    if(e.key==='F9'){
+      e.preventDefault();
+      doPrint();
+    }
+  });
+})();
 </script></body></html>
