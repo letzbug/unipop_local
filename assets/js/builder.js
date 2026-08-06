@@ -385,8 +385,12 @@
    }
    (async()=>{
      try{
+       // Vor dem Öffnen immer die komplette Playlist speichern.
        await updateCampaignPreview();
-       w.location.href='display-preview.html?t='+Date.now();
+
+       // mode=playlist zwingt die neue Seite dazu, die Playlist aus
+       // localStorage zu lesen und eine alte Einzelvorschau zu ignorieren.
+       w.location.href='display-preview.html?mode=playlist&t='+Date.now();
      }catch(e){
        console.error(e);
        try{w.close()}catch(_){}
