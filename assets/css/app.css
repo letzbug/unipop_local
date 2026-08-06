@@ -293,3 +293,23 @@ textarea.auto-textarea{
   overflow:hidden !important;
   line-height:1.34 !important;
 }
+
+/* v28 – final A4 footer */
+.flyer-footer-ref{
+  display:grid !important;
+  grid-template-columns:34mm 1fr 48mm !important;
+  align-items:center !important;
+  gap:7mm !important;
+  padding:4mm 10mm !important;
+  color:#fff !important;
+}
+.flyer-footer-logo{
+  height:100%;display:flex;align-items:center;justify-content:center;
+  border-right:.3mm solid rgba(255,255,255,.75);padding-right:7mm
+}
+.flyer-footer-logo img{max-height:16mm;max-width:28mm;width:auto}
+.flyer-footer-contact,.flyer-footer-address{
+  display:flex;flex-direction:column;gap:.7mm;font-size:7.5pt;line-height:1.45
+}
+.flyer-footer-contact strong{font-size:8pt;margin-bottom:.5mm}
+.flyer-footer-address{border-left:.3mm solid rgba(255,255,255,.75);padding-left:7mm}

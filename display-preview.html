@@ -115,8 +115,12 @@ h2{font-size:17pt;line-height:1.15;font-weight:400;margin:4mm 0 0}
 .badge{width:30mm;height:30mm;border-radius:50%;display:grid;place-items:center;text-align:center;background:#B6DEDF;color:#0D1C55;font-size:8.8pt;font-weight:800;line-height:1.15;margin-bottom:5mm}
 .descpanel h3{font-size:11pt;letter-spacing:.03em;margin:0 0 4mm;flex:0 0 auto}
 .desc{font-size:10.5pt;line-height:1.34;overflow:hidden;flex:1 1 auto;min-height:0}
-.footer{position:absolute;left:0;right:0;bottom:0;height:9%;background:#07102f;display:flex;align-items:center;padding:5mm 15mm}
-.footer img{height:16mm;width:auto;display:block}
+.footer{position:absolute;left:0;right:0;bottom:0;height:9%;background:#07102f;color:#fff;display:grid;grid-template-columns:34mm 1fr 48mm;align-items:center;gap:7mm;padding:4mm 10mm}
+.footer-logo{height:100%;display:flex;align-items:center;justify-content:center;border-right:.3mm solid rgba(255,255,255,.75);padding-right:7mm}
+.footer-logo img{max-height:16mm;max-width:28mm;width:auto;display:block}
+.footer-contact,.footer-address{font-size:7.5pt;line-height:1.45;display:flex;flex-direction:column;gap:.7mm}
+.footer-contact strong{font-size:8pt;margin-bottom:.5mm}
+.footer-address{border-left:.3mm solid rgba(255,255,255,.75);padding-left:7mm}
 @page{size:A4 portrait;margin:0}
 @media print{html,body,.page{width:210mm;height:297mm}}
 </style>
@@ -144,7 +148,20 @@ h2{font-size:17pt;line-height:1.15;font-weight:400;margin:4mm 0 0}
       <div id="printDesc" class="desc">${desc}</div>
     </div>
   </section>
-  <footer class="footer"><img src="${logoUrl}" alt="UniPop"></footer>
+  <footer class="footer">
+    <div class="footer-logo"><img src="${logoUrl}" alt="UniPop"></div>
+    <div class="footer-contact">
+      <strong>Informations sur les cours UniPop:</strong>
+      <span>Tél. : (+352) 247 56400</span>
+      <span>e-Mail : info@unipop.lu</span>
+      <span>☎ de 8:00 à 12h00 et de 13h00 à 17h00</span>
+    </div>
+    <div class="footer-address">
+      <span>Site Belval</span>
+      <span>14, Porte de France</span>
+      <span>L-4360 Esch-sur-Alzette</span>
+    </div>
+  </footer>
 </div>
 <script>
 (function(){
