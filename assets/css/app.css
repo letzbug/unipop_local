@@ -78,3 +78,28 @@ textarea.auto-textarea{
   font-weight:800;
   letter-spacing:.05em;
 }
+
+/* v12: Playlist-Einträge sind direkt editierbar */
+.playlist-card{padding:0!important;overflow:hidden}
+.playlist-main{
+  padding:11px;
+  cursor:pointer;
+  transition:background .15s ease;
+}
+.playlist-main:hover{background:#faf7fc}
+.playlist-card.active .playlist-main{background:#f8f1fb}
+.playlist-edit-hint{
+  margin-top:6px!important;
+  color:#76258a!important;
+  font-weight:700;
+  font-size:10px!important;
+}
+.playlist-card .playlist-actions{
+  padding:0 11px 11px;
+  margin-top:0;
+}
+
+/* v13: mehr Luft zwischen mehrzeiligen Kurstiteln */
+.dtitle{
+  line-height:1.04 !important;
+}

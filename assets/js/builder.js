@@ -146,16 +146,85 @@
 
  function renderPlaylist(){
    $('playlist').innerHTML='';
+
    playlist.forEach((it,i)=>{
-     const d=document.createElement('div');d.className='course-card';
-     d.innerHTML=`<b>${i+1}. ${esc(it.course.title)}</b><small>${esc(it.course.code)} · ${esc(it.course.place)}</small>
-       <div class="playlist-actions"><button class="btn" data-a="up">↑</button><button class="btn" data-a="down">↓</button><button class="btn danger" data-a="del">Entfernen</button></div>`;
-     d.querySelector('[data-a=up]').onclick=()=>{if(i>0){[playlist[i-1],playlist[i]]=[playlist[i],playlist[i-1]];renderPlaylist()}};
-     d.querySelector('[data-a=down]').onclick=()=>{if(i<playlist.length-1){[playlist[i+1],playlist[i]]=[playlist[i],playlist[i+1]];renderPlaylist()}};
-     d.querySelector('[data-a=del]').onclick=()=>{playlist.splice(i,1);renderPlaylist()};
+     const d=document.createElement('div');
+     d.className='course-card playlist-card'+(selected?.id===it.course.id?' active':'');
+     d.innerHTML=`
+       <div class="playlist-main" role="button" tabindex="0" title="Kurs bearbeiten">
+         <b>${i+1}. ${esc(it.course.title)}</b>
+         <small>${esc(it.course.code)} · ${esc(it.course.place)}</small>
+         <small class="playlist-edit-hint">Klicken zum Bearbeiten</small>
+       </div>
+       <div class="playlist-actions">
+         <button class="btn" data-a="up" title="Nach oben">↑</button>
+         <button class="btn" data-a="down" title="Nach unten">↓</button>
+         <button class="btn danger" data-a="del">Entfernen</button>
+       </div>`;
+
+     const openForEdit=async()=>{
+       // Playlist-Daten werden zurück in den Editor geladen.
+       selected={...it.course};
+
+       $('title').value=it.course.title||'';
+       $('code').value=it.course.code||'';
+       $('date').value=it.course.date||'';
+       $('time').value=it.course.time||'';
+       $('place').value=it.course.place||'';
+       $('trainer').value=it.course.trainer||'';
+       $('originalText').value=it.course.description||'';
+       $('displayText').value=it.displayText||UniData.shorten(it.course.description||'',245);
+
+       // Playlist-Bild hat Vorrang, danach IndexedDB.
+       let img=it.image||'';
+       if(!img) img=await UniImageStore.get(it.course.id)||'';
+       $('imgPrev').src=img||'assets/images/placeholder.svg';
+       $('imageInput').value='';
+
+       requestAnimationFrame(()=>requestAnimationFrame(resizeTexts));
+       renderCourses($('search').value);
+       renderPlaylist();
+       await updateEditingPreview();
+
+       // Editor sichtbar machen.
+       document.getElementById('title')?.scrollIntoView({behavior:'smooth',block:'center'});
+     };
+
+     const main=d.querySelector('.playlist-main');
+     main.onclick=openForEdit;
+     main.onkeydown=e=>{
+       if(e.key==='Enter'||e.key===' '){
+         e.preventDefault();
+         openForEdit();
+       }
+     };
+
+     d.querySelector('[data-a=up]').onclick=e=>{
+       e.stopPropagation();
+       if(i>0){
+         [playlist[i-1],playlist[i]]=[playlist[i],playlist[i-1]];
+         renderPlaylist();
+       }
+     };
+     d.querySelector('[data-a=down]').onclick=e=>{
+       e.stopPropagation();
+       if(i<playlist.length-1){
+         [playlist[i+1],playlist[i]]=[playlist[i],playlist[i+1]];
+         renderPlaylist();
+       }
+     };
+     d.querySelector('[data-a=del]').onclick=e=>{
+       e.stopPropagation();
+       playlist.splice(i,1);
+       renderPlaylist();
+     };
+
      $('playlist').appendChild(d);
    });
-   if(!playlist.length)$('playlist').innerHTML='<div class="note">Noch keine Kurse in der Playlist.</div>';
+
+   if(!playlist.length){
+     $('playlist').innerHTML='<div class="note">Noch keine Kurse in der Playlist.</div>';
+   }
  }
 
  function campaignPayload(){
@@ -229,10 +298,21 @@
  $('addToPlaylist').onclick=async()=>{
    if(!selected)return;
    const item=currentItem();
-   item.image=await UniImageStore.get(selected.id)||'';
-   const idx=playlist.findIndex(x=>x.course.id===selected.id);
-   if(idx>=0)playlist[idx]=item;else playlist.push(item);
+
+   // Falls im Editor ein vorhandenes Playlist-Bild steckt, behalten wir es,
+   // solange kein neues Bild hochgeladen wurde.
+   const existingIndex=playlist.findIndex(x=>x.course.id===selected.id);
+   const dbImage=await UniImageStore.get(selected.id)||'';
+   item.image=dbImage || (existingIndex>=0 ? playlist[existingIndex].image||'' : '');
+
+   if(existingIndex>=0){
+     playlist[existingIndex]=item;
+   }else{
+     playlist.push(item);
+   }
+
    renderPlaylist();
+   await updateEditingPreview();
  };
 
  ['duration','showQR','showPrint'].forEach(id=>{$(id).addEventListener('change',updateEditingPreview)});
