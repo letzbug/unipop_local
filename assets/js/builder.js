@@ -95,6 +95,9 @@
    $('originalText').value=selected.description;
    $('displayText').value=UniData.shorten(selected.description,245);
    $('imgPrev').src=UniStore.getImage(selected.id)||'assets/images/placeholder.svg';
+   // Wichtig: Datei-Input beim Kurswechsel zurücksetzen.
+   // Sonst feuert "change" bei einem weiteren Upload je nach Browser nicht zuverlässig.
+   $('imageInput').value='';
    requestAnimationFrame(()=>requestAnimationFrame(resizeTexts));
  }
 
@@ -153,12 +156,29 @@
  ['title','code','date','time','place','trainer'].forEach(id=>$(id).addEventListener('input',updateEditingPreview));
 
  $('imageInput').onchange=e=>{
-   const f=e.target.files?.[0];if(!f||!selected)return;
+   const f=e.target.files?.[0];
+   if(!f||!selected)return;
+
+   // Kurs-ID beim Start des Uploads festhalten.
+   const courseId=selected.id;
    const r=new FileReader();
-   r.onload=()=>{UniStore.setImage(selected.id,r.result);$('imgPrev').src=r.result;updateEditingPreview()};
+
+   r.onload=()=>{
+     UniStore.setImage(courseId,r.result);
+
+     // Vorschau nur aktualisieren, wenn noch derselbe Kurs ausgewählt ist.
+     if(selected && selected.id===courseId){
+       $('imgPrev').src=r.result;
+       updateEditingPreview();
+     }
+
+     // Input wieder leeren, damit auch dieselbe Datei später erneut gewählt werden kann.
+     $('imageInput').value='';
+   };
+
    r.readAsDataURL(f);
  };
- $('removeImage').onclick=()=>{if(!selected)return;UniStore.setImage(selected.id,'');$('imgPrev').src='assets/images/placeholder.svg';updateEditingPreview()};
+ $('removeImage').onclick=()=>{if(!selected)return;UniStore.setImage(selected.id,'');$('imgPrev').src='assets/images/placeholder.svg';$('imageInput').value='';updateEditingPreview()};
 
  $('addToPlaylist').onclick=()=>{
    if(!selected)return;
