@@ -263,8 +263,8 @@
      console.error('Preview storage error',e);
    }
  }
- function updateCampaignPreview(){
-   const p=playlist.length?campaignPayload():editingPayload();
+ async function updateCampaignPreview(){
+   const p=playlist.length?campaignPayload():await editingPayload();
    sessionStorage.setItem('unipop_preview_assignment',JSON.stringify(p));
  }
 
@@ -363,13 +363,21 @@
  };
 
  $('fullPreview').onclick=()=>{
-   try{
-     updateCampaignPreview();
-     window.open('display-preview.html?t='+Date.now(),'_blank');
-   }catch(e){
-     console.error(e);
-     alert('Vorschau konnte nicht geöffnet werden: '+(e.message||e));
+   const w=window.open('about:blank','unipop_full_preview');
+   if(!w){
+     alert('Bitte Pop-ups für diese Seite erlauben.');
+     return;
    }
+   (async()=>{
+     try{
+       await updateCampaignPreview();
+       w.location.href='display-preview.html?t='+Date.now();
+     }catch(e){
+       console.error(e);
+       try{w.close()}catch(_){}
+       alert('Vorschau konnte nicht geöffnet werden: '+(e.message||e));
+     }
+   })();
  };
 
  function refreshStats(){

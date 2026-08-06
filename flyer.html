@@ -48,7 +48,11 @@
 <script src="assets/js/image-store.js"></script>
 <script>
 (async function(){
-  const raw=localStorage.getItem('unipop_print_payload');
+  let raw=localStorage.getItem('unipop_print_payload')||sessionStorage.getItem('unipop_print_payload');
+  if(!raw && new URLSearchParams(location.search).has('wait')){
+    document.body.innerHTML='<div style="font-family:Arial;padding:40px">Préparation du flyer…</div>';
+    return;
+  }
   if(!raw){ return; }
 
   const p=JSON.parse(raw), c=p.course||{};

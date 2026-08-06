@@ -41,6 +41,7 @@
    createdAt:new Date().toISOString()
  };
  localStorage.setItem('unipop_print_payload',JSON.stringify(payload));
+ sessionStorage.setItem('unipop_print_payload',JSON.stringify(payload));
 
  t.textContent='Votre flyer est en cours d’impression…';
  t.classList.add('show');
