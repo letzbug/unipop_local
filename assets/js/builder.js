@@ -16,7 +16,12 @@
 
  try{
    courses=await UniData.loadCourses();
-   $('loadState').innerHTML=`<b>${courses.length} aktuelle/zukünftige UniPop-Kurse geladen</b><br><span class="note">Quelle: ${esc(window.UNIPOP_JSON_SOURCE||'trainings.json')}<br>Es werden nur Kurse ab heute angezeigt.</span>`;
+   if(courses.length){
+     $('loadState').innerHTML=`<b>${courses.length} aktuelle/zukünftige UniPop-Kurse geladen</b><br><span class="note">Quelle: ${esc(window.UNIPOP_JSON_SOURCE||'trainings.json')}<br>Filter: organisateur.code = UNIPOP · Kursbeginn ab heute.</span>`;
+   }else{
+     const total=window.UNIPOP_JSON_UNIPOP_TOTAL??0;
+     $('loadState').innerHTML=`<b>trainings.json erfolgreich geladen – momentan 0 aktuelle/zukünftige UniPop-Kurse.</b><br><span class="note">Quelle: ${esc(window.UNIPOP_JSON_SOURCE||'trainings.json')}<br>${total} UniPop-Datensätze sind insgesamt in der Datei, aber keiner beginnt ab heute. Sobald die neue Kursrunde in trainings.json erscheint, wird sie automatisch angezeigt.</span>`;
+   }
    selected=courses[0]||null;
  }catch(e){
    $('loadState').innerHTML=`<b>trainings.json konnte nicht geladen werden.</b><br><span class="note">${esc(e.message)}</span>`;console.error(e);return
@@ -145,6 +150,5 @@
    UniStore.byCourse().slice(0,10).forEach(x=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(x.title)}</td><td>${esc(x.code)}</td><td>${x.total}</td>`;$('topTable').appendChild(tr)})
  }
 
- renderCourses();fill();renderPlaylist();refreshStats();setInterval(refreshStats,10000);
- if(selected)updateEditingPreview();
+ renderCourses(); if(selected){fill();updateEditingPreview();} else {$('courseList').innerHTML='<div class="note">Zurzeit keine UniPop-Kurse ab heute in trainings.json.</div>'; $('preview').src='about:blank';} renderPlaylist();refreshStats();setInterval(refreshStats,10000);
 })();

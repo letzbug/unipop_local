@@ -88,10 +88,15 @@
             const db=b.startDate?new Date(b.startDate).getTime():Number.MAX_SAFE_INTEGER;
             return da-db || a.title.localeCompare(b.title,'fr');
           });
-        if(courses.length){window.UNIPOP_JSON_SOURCE=url;return courses}
+        // Die Quelle wurde erfolgreich geladen. Auch 0 Treffer sind ein gültiges Ergebnis:
+        // Dann gibt es aktuell schlicht keine UNIPOP-Kurse ab heute.
+        window.UNIPOP_JSON_SOURCE=url;
+        window.UNIPOP_JSON_TOTAL=raw.length;
+        window.UNIPOP_JSON_UNIPOP_TOTAL=raw.filter(x=>x.organisateur?.code===cfg.organiserCode).length;
+        return courses;
       }catch(e){lastErr=e;console.warn('trainings.json failed:',url,e)}
     }
-    throw new Error((lastErr?.message||'Unbekannter Fehler')+' | Quelle: '+(cfg.jsonUrls?.[0]||'keine'));
+    throw new Error((lastErr?.message||'JSON konnte technisch nicht geladen werden')+' | Quelle: '+(cfg.jsonUrls?.[0]||'keine'));
   }
   function shorten(text,max=245){
     const t=cleanHtml(text);
