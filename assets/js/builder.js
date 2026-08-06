@@ -184,7 +184,7 @@
        requestAnimationFrame(()=>requestAnimationFrame(resizeTexts));
        renderCourses($('search').value);
        renderPlaylist();
-       await updateEditingPreview();
+       updateEditingPreview();
 
        // Editor sichtbar machen.
        document.getElementById('title')?.scrollIntoView({behavior:'smooth',block:'center'});
@@ -228,21 +228,27 @@
  }
 
  function campaignPayload(){
-   return {name:$('campaignName').value.trim()||'UniPop Auswahl',items:playlist,duration:Number($('duration').value)||14,showQR:$('showQR').checked,showPrint:$('showPrint').checked};
+   const cleanItems=playlist.map(it=>({...it,image:''}));
+   return {name:$('campaignName').value.trim()||'UniPop Auswahl',items:cleanItems,duration:Number($('duration').value)||14,showQR:$('showQR').checked,showPrint:$('showPrint').checked};
  }
- async function editingPayload(){
+ function editingPayload(){
    if(!selected)return {name:'Vorschau',items:[],duration:Number($('duration').value)||14,showQR:$('showQR').checked,showPrint:$('showPrint').checked};
    const item=currentItem();
-   item.image=await UniImageStore.get(selected.id)||'';
+   item.image='';
    return {name:'Vorschau',items:[item],duration:Number($('duration').value)||14,showQR:$('showQR').checked,showPrint:$('showPrint').checked};
  }
- async function updateEditingPreview(){
+ function updateEditingPreview(){
    if(!selected)return;
-   sessionStorage.setItem('unipop_preview_assignment',JSON.stringify(await editingPayload()));
-   $('preview').src='display-preview.html?t='+Date.now();
+   try{
+     sessionStorage.setItem('unipop_preview_assignment',JSON.stringify(editingPayload()));
+     $('preview').src='display-preview.html?t='+Date.now();
+   }catch(e){
+     console.error('Preview storage error',e);
+   }
  }
- async function updateCampaignPreview(){
-   sessionStorage.setItem('unipop_preview_assignment',JSON.stringify(playlist.length?campaignPayload():await editingPayload()));
+ function updateCampaignPreview(){
+   const p=playlist.length?campaignPayload():editingPayload();
+   sessionStorage.setItem('unipop_preview_assignment',JSON.stringify(p));
  }
 
  $('search').oninput=e=>renderCourses(e.target.value);
@@ -299,12 +305,11 @@
    if(!selected)return;
    const item=currentItem();
 
-   // Falls im Editor ein vorhandenes Playlist-Bild steckt, behalten wir es,
-   // solange kein neues Bild hochgeladen wurde.
-   const existingIndex=playlist.findIndex(x=>x.course.id===selected.id);
-   const dbImage=await UniImageStore.get(selected.id)||'';
-   item.image=dbImage || (existingIndex>=0 ? playlist[existingIndex].image||'' : '');
+   // Das eigentliche Bild bleibt ausschließlich in IndexedDB.
+   // In Playlist/localStorage speichern wir KEIN Base64-Bild mehr.
+   item.image='';
 
+   const existingIndex=playlist.findIndex(x=>x.course.id===selected.id);
    if(existingIndex>=0){
      playlist[existingIndex]=item;
    }else{
@@ -312,19 +317,31 @@
    }
 
    renderPlaylist();
-   await updateEditingPreview();
+   updateEditingPreview();
  };
 
  ['duration','showQR','showPrint'].forEach(id=>{$(id).addEventListener('change',updateEditingPreview)});
+
  $('publish').onclick=()=>{
    if(!playlist.length){alert('Bitte zuerst mindestens einen Kurs zur Playlist hinzufügen.');return}
-   UniStore.setAssignment($('screenSelect').value,campaignPayload());
-   alert('Playlist gespeichert. Für die echte Fernübertragung wird später das Backend angeschlossen.');
-   refreshStats();
+   try{
+     UniStore.setAssignment($('screenSelect').value,campaignPayload());
+     alert('Playlist gespeichert. Für die echte Fernübertragung zum Display wird später das Backend angeschlossen.');
+     refreshStats();
+   }catch(e){
+     console.error(e);
+     alert('Playlist konnte nicht gespeichert werden: '+(e.message||e));
+   }
  };
- $('fullPreview').onclick=async()=>{
-   await updateCampaignPreview();
-   window.open('display-preview.html','_blank');
+
+ $('fullPreview').onclick=()=>{
+   try{
+     updateCampaignPreview();
+     window.open('display-preview.html?t='+Date.now(),'_blank');
+   }catch(e){
+     console.error(e);
+     alert('Vorschau konnte nicht geöffnet werden: '+(e.message||e));
+   }
  };
 
  function refreshStats(){
@@ -338,5 +355,5 @@
    UniStore.byCourse().slice(0,10).forEach(x=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(x.title)}</td><td>${esc(x.code)}</td><td>${x.total}</td>`;$('topTable').appendChild(tr)})
  }
 
- renderCourses(); if(selected){await fill();await updateEditingPreview();} else {$('courseList').innerHTML='<div class="note">Keine UniPop-Kurse in trainings.json.</div>'; $('preview').src='about:blank';} renderPlaylist();refreshStats();setInterval(refreshStats,10000);
+ renderCourses(); if(selected){await fill();updateEditingPreview();} else {$('courseList').innerHTML='<div class="note">Keine UniPop-Kurse in trainings.json.</div>'; $('preview').src='about:blank';} renderPlaylist();refreshStats();setInterval(refreshStats,10000);
 })();

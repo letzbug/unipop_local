@@ -103,3 +103,73 @@ textarea.auto-textarea{
 .dtitle{
   line-height:1.04 !important;
 }
+
+/* v17 – UniPop Corporate Branding
+   Colours sampled directly from the supplied UniPop logo:
+   Dark blue  #0D1C55
+   Light blue #B6DEDF
+*/
+:root{
+  --navy:#0D1C55 !important;
+  --purple:#0D1C55 !important;
+  --magenta:#B6DEDF !important;
+}
+
+/* Main display */
+.display-screen{
+  background:#0D1C55 !important;
+}
+.no-image-bg{
+  background:
+    radial-gradient(circle at 22% 40%, #26396f 0%, #17275f 38%, #0D1C55 75%) !important;
+}
+.hero-overlay{
+  background:linear-gradient(
+    90deg,
+    rgba(13,28,85,.08) 0%,
+    rgba(13,28,85,.30) 38%,
+    rgba(13,28,85,.94) 63%,
+    rgba(13,28,85,.99) 100%
+  ) !important;
+}
+
+/* Light UniPop blue replaces the magenta/purple accents */
+.dkicker,
+.dmeta .ico{
+  color:#B6DEDF !important;
+}
+
+.avail{
+  background:#B6DEDF !important;
+  color:#0D1C55 !important;
+  box-shadow:0 10px 30px rgba(13,28,85,.28) !important;
+}
+
+.printbar{
+  background:linear-gradient(90deg,#0D1C55 0%,#183377 50%,#0D1C55 100%) !important;
+  color:#fff !important;
+}
+
+/* Real supplied logo */
+.display-logo{
+  position:absolute !important;
+  right:3.3vw !important;
+  top:2.6vh !important;
+  width:14vw !important;
+  height:auto !important;
+  font-size:0 !important;
+  letter-spacing:0 !important;
+}
+.display-logo img{
+  display:block;
+  width:100%;
+  height:auto;
+  object-fit:contain;
+}
+
+/* Remove any decorative dots that might remain from old versions */
+.display-logo .ldots,
+.display-logo .brand-dots,
+.display-logo .logo-dots{
+  display:none !important;
+}
