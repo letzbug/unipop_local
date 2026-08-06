@@ -61,14 +61,8 @@
       raw:x
     };
   }
-  function decodeGithubBase64(content){
-    const binary=atob(String(content||'').replace(/\s/g,''));
-    const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
-    return new TextDecoder('utf-8').decode(bytes);
-  }
-
   async function fetchOne(url){
-    // Cache-Buster: der Builder soll bei jedem Start den aktuellen main-Stand sehen.
+    // Always request a fresh copy. No GitHub API -> no API rate-limit/403.
     const sep=url.includes('?')?'&':'?';
     const requestUrl=url+sep+'_ts='+Date.now();
 
@@ -76,49 +70,23 @@
       cache:'no-store',
       mode:'cors',
       credentials:'omit',
-      headers:{
-        'Accept': url.includes('api.github.com')
-          ? 'application/vnd.github+json'
-          : 'application/json,text/plain,*/*'
-      }
+      headers:{'Accept':'application/json,text/plain,*/*'}
     });
+
     if(!r.ok) throw new Error('HTTP '+r.status);
-
-    // GitHub Contents API: liefert SHA + Base64-Inhalt der aktuellsten Datei auf main.
-    if(url.includes('api.github.com/repos/') && url.includes('/contents/')){
-      const meta=await r.json();
-      window.UNIPOP_JSON_SHA=meta.sha||'';
-      window.UNIPOP_JSON_UPDATED_SOURCE=meta.html_url||url;
-
-      let text='';
-      if(meta.encoding==='base64' && meta.content){
-        text=decodeGithubBase64(meta.content);
-      }else if(meta.download_url){
-        const rr=await fetch(meta.download_url+'?sha='+(meta.sha||Date.now()),{
-          cache:'no-store',
-          mode:'cors',
-          credentials:'omit'
-        });
-        if(!rr.ok) throw new Error('Download HTTP '+rr.status);
-        text=await rr.text();
-      }else{
-        throw new Error('GitHub API liefert keinen Dateiinhalt');
-      }
-
-      let d;
-      try{ d=JSON.parse(text); }
-      catch(e){ throw new Error('GitHub-Datei ist kein gültiges JSON'); }
-
-      if(Array.isArray(d)) return d;
-      for(const k of ['cours','courses','items','data']) if(Array.isArray(d?.[k])) return d[k];
-      throw new Error('Unbekannte JSON-Struktur');
-    }
 
     const text=await r.text();
     let d;
-    try{d=JSON.parse(text)}catch(e){throw new Error('Antwort ist kein gültiges JSON')}
+    try{
+      d=JSON.parse(text);
+    }catch(e){
+      throw new Error('Antwort ist kein gültiges JSON');
+    }
+
     if(Array.isArray(d)) return d;
-    for(const k of ['cours','courses','items','data']) if(Array.isArray(d?.[k])) return d[k];
+    for(const k of ['cours','courses','items','data']){
+      if(Array.isArray(d?.[k])) return d[k];
+    }
     throw new Error('Unbekannte JSON-Struktur');
   }
 

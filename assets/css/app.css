@@ -174,8 +174,17 @@ textarea.auto-textarea{
   display:none !important;
 }
 
-/* ONLY CHANGE: UniPop logo position */
+/* v20 — ONLY visible-logo positioning correction.
+   unipop-logo.png has been physically cropped to its visible pixels,
+   therefore these 8mm are measured to the visible logo itself. */
 .display-logo{
   top:8mm !important;
   right:8mm !important;
+  width:42mm !important;
+  height:auto !important;
+}
+.display-logo img{
+  display:block !important;
+  width:100% !important;
+  height:auto !important;
 }
