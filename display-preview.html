@@ -93,7 +93,7 @@
 <meta charset="utf-8">
 <title>${title}</title>
 <style>
-*{box-sizing:border-box}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 html,body{margin:0;padding:0;background:#fff;font-family:Arial,Helvetica,sans-serif;color:#151622}
 .page{width:210mm;height:297mm;position:relative;overflow:hidden;background:#fff}
 .top{height:52%;padding:12mm 15mm 7mm}
@@ -122,7 +122,12 @@ h2{font-size:17pt;line-height:1.15;font-weight:400;margin:4mm 0 0}
 .footer-contact strong{font-size:8pt;margin-bottom:.5mm}
 .footer-address{border-left:.3mm solid rgba(255,255,255,.75);padding-left:7mm}
 @page{size:A4 portrait;margin:0}
-@media print{html,body,.page{width:210mm;height:297mm}}
+@media print{
+html,body,.page{width:210mm;height:297mm}
+.page{background:#fff!important}
+.descpanel{background:#0D1C55!important;color:#fff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.footer{background:#07102f!important;color:#fff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
 </style>
 </head>
 <body>
