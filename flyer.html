@@ -1,1 +1,89 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Flyer UniPop</title><link rel="stylesheet" href="assets/css/app.css"></head><body class="flyer-body"><article class="flyer"><div class="flyer-top"><div><div class="flyer-logo">UniPop</div><div class="flyer-kicker">COURS PRÈS DE CHEZ VOUS</div></div><img id="fQr" class="flyer-qr"></div><h1 id="fTitle"></h1><h2 id="fSubtitle"></h2><div class="flyer-grid"><div><img id="fImage" class="flyer-photo"><div id="fDesc" class="flyer-desc"></div></div><div><div class="flyer-meta"><div><b>Date</b><br><span id="fDate"></span></div><div><b>Horaire</b><br><span id="fTime"></span></div><div><b>Lieu</b><br><span id="fPlace"></span></div><div><b>Formateur</b><br><span id="fTrainer"></span></div><div class="flyer-code" id="fCode"></div></div></div></div><footer class="flyer-footer"><b>UniPop</b><span>www.unipop.lu</span></footer></article><script>const p=JSON.parse(sessionStorage.getItem('unipop_print_payload')||'null');if(p){const c=p.course,$=id=>document.getElementById(id);$('fTitle').textContent=c.title||'';$('fSubtitle').textContent=c.subtitle||'';$('fDesc').textContent=c.description||p.displayText||'';$('fDate').textContent=c.date||'';$('fTime').textContent=c.time||'';$('fPlace').textContent=c.place||'';$('fTrainer').textContent=c.trainer||'UniPop';$('fCode').textContent='Code du cours : '+(c.code||'—');$('fQr').src=p.qrUrl||'';if(p.image){$('fImage').src=p.image}else{$('fImage').style.display='none'}setTimeout(()=>window.print(),600)}</script></body></html>
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flyer UniPop</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body class="flyer-body">
+<article class="flyer flyer-ref">
+  <section class="flyer-upper">
+    <div class="flyer-kicker">COURS PRÈS DE CHEZ VOUS</div>
+    <h1 id="fTitle"></h1>
+    <h2 id="fSubtitle"></h2>
+
+    <div class="flyer-info-row">
+      <div class="flyer-meta-ref">
+        <div><span class="ficon">▦</span><span id="fDate"></span></div>
+        <div><span class="ficon">◷</span><span id="fTime"></span></div>
+        <div><span class="ficon">⌖</span><span id="fPlace"></span></div>
+        <div><span class="ficon">♙</span><span id="fTrainer"></span></div>
+        <div class="flyer-code" id="fCode"></div>
+      </div>
+      <div class="flyer-qr-wrap">
+        <img id="fQr" class="flyer-qr" alt="QR Code">
+        <div class="flyer-scan">Scannez-moi !</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="flyer-lower">
+    <div class="flyer-photo-wrap">
+      <img id="fImage" class="flyer-photo" alt="">
+      <div id="fNoImage" class="flyer-noimage">UniPop</div>
+    </div>
+    <div class="flyer-description-panel">
+      <div class="flyer-availability">PLACES<br>DISPONIBLES</div>
+      <h3>DESCRIPTION</h3>
+      <div id="fDesc" class="flyer-desc"></div>
+    </div>
+  </section>
+
+  <footer class="flyer-footer-ref">
+    <img src="assets/images/unipop-logo.png" alt="UniPop" class="flyer-real-logo">
+  </footer>
+</article>
+
+<script src="assets/js/image-store.js"></script>
+<script>
+(async function(){
+  const raw=localStorage.getItem('unipop_print_payload');
+  if(!raw){ return; }
+
+  const p=JSON.parse(raw), c=p.course||{};
+  const $=id=>document.getElementById(id);
+
+  $('fTitle').textContent=c.title||'';
+  $('fSubtitle').textContent=c.subtitle||c.subject||'';
+  $('fDesc').textContent=c.description||p.displayText||'';
+  $('fDate').textContent=c.date||'';
+  $('fTime').textContent=c.time||'';
+  $('fPlace').textContent=c.place||'';
+  $('fTrainer').textContent=c.trainer||'UniPop';
+  $('fCode').textContent='Code du cours : '+(c.code||'—');
+  $('fQr').src=p.qrUrl||'';
+
+  try{
+    const image=await UniImageStore.get(p.courseId||c.id);
+    if(image){
+      $('fImage').src=image;
+      $('fImage').style.display='block';
+      $('fNoImage').style.display='none';
+    }else{
+      $('fImage').style.display='none';
+      $('fNoImage').style.display='grid';
+    }
+  }catch(e){
+    console.error(e);
+    $('fImage').style.display='none';
+    $('fNoImage').style.display='grid';
+  }
+
+  const waits=[...document.images].map(img=>img.complete?Promise.resolve():new Promise(res=>{img.onload=img.onerror=res;}));
+  await Promise.all(waits);
+  setTimeout(()=>window.print(),350);
+})();
+</script>
+</body>
+</html>
