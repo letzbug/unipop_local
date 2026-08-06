@@ -5,7 +5,7 @@
 
  let displays=UniStore.getDisplays();
  // Alte doppelte Standortkarten aus früheren lokalen Versionen entfernen.
- displays=[...new Map(displays.map(d=>[d.id,d])).values()];
+ displays=dedupeDisplays(displays);
  UniStore.saveDisplays(displays);
  const standardDisplays=cfg.screens||[];
  let displayListChanged=false;
@@ -17,8 +17,14 @@
 
  function refillDisplaySelect(){
    const sel=$('screenSelect'),current=sel.value;
+   displays=dedupeDisplays(displays);
    sel.innerHTML='';
-   displays.forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o)});
+   displays.forEach(s=>{
+     const o=document.createElement('option');
+     o.value=s.id;
+     o.textContent=s.name;
+     sel.appendChild(o);
+   });
    sel.value=displays.some(d=>d.id===current)?current:(displays[0]?.id||'');
  }
  refillDisplaySelect();
@@ -43,6 +49,18 @@
  }
 
  let activeDisplayId=$('screenSelect').value||'';
+ let displayRenderToken=0;
+
+ function dedupeDisplays(list){
+   const map=new Map();
+   (list||[]).forEach(d=>{
+     const id=String(d?.id||'').trim();
+     if(!id)return;
+     if(!map.has(id)) map.set(id,{...d,id});
+   });
+   return [...map.values()];
+ }
+
 
  function clearDraft(){
    playlist=[];
@@ -73,19 +91,42 @@
  }
 
  async function renderDisplayCards(){
-   const wrap=$('displayCards'); if(!wrap)return;
-   wrap.innerHTML='';
-   for(const d of displays){
-     const a=await UniHybrid.getAssignment(d.id);
+   const wrap=$('displayCards');
+   if(!wrap)return;
+
+   const token=++displayRenderToken;
+   const unique=dedupeDisplays(displays);
+
+   // Replace the canonical in-memory list too.
+   displays=unique;
+
+   const cards=[];
+   for(const d of unique){
+     let a=null;
+     try{
+       a=await UniHybrid.getAssignment(d.id);
+     }catch(e){
+       console.warn('Assignment card load failed',d.id,e);
+     }
+
+     // A newer render started while we were awaiting: abort this stale render.
+     if(token!==displayRenderToken)return;
+
      const el=document.createElement('button');
      el.type='button';
      el.className='display-card'+(d.id===activeDisplayId?' active':'');
+     el.dataset.displayId=d.id;
      el.innerHTML=`<span class="display-card-name">${esc(d.name)}</span>
        <span class="display-card-meta">${a?.items?.length ? a.items.length+' Kurse gespeichert' : 'Keine Playlist'}</span>
        <span class="display-card-url">display.html?screen=${esc(d.id)}</span>`;
      el.onclick=()=>loadDisplayPlaylist(d.id);
-     wrap.appendChild(el);
+     cards.push(el);
    }
+
+   if(token!==displayRenderToken)return;
+
+   // One atomic replace instead of append-per-await.
+   wrap.replaceChildren(...cards);
  }
 
  async function loadDisplayPlaylist(id){
@@ -160,7 +201,7 @@
      try{
        const remoteDisplays=await UniHybrid.getDisplays(cfg.screens);
        if(Array.isArray(remoteDisplays) && remoteDisplays.length){
-         displays=remoteDisplays;
+         displays=dedupeDisplays(remoteDisplays);
          refillDisplaySelect();
          await renderDisplayCards();
        }
@@ -426,7 +467,7 @@
  $('cancelDisplayBtn').onclick=()=>$('displayModal').classList.add('hidden');
  $('saveDisplayBtn').onclick=async()=>{
    const name=$('newDisplayName').value.trim(); if(!name)return;
-   const d=await UniHybrid.addDisplay(name); displays=await UniHybrid.getDisplays(cfg.screens); refillDisplaySelect();
+   const d=await UniHybrid.addDisplay(name); displays=dedupeDisplays(await UniHybrid.getDisplays(cfg.screens)); refillDisplaySelect();
    $('screenSelect').value=d.id; $('displayModal').classList.add('hidden'); await renderDisplayCards(); loadDisplayPlaylist(d.id);
  };
 
