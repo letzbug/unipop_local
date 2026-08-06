@@ -49,8 +49,16 @@
     setAssignment(screenId,payload){
       const a=this.getAssignments();
       a[screenId]={...payload,publishedAt:new Date().toISOString()};
-      set('assignments',a);
-      this.log({type:'publish',screenId,count:payload.items?.length||0,campaign:payload.name||''})
+      try{
+        set('assignments',a);
+      }catch(e){
+        if(e && (e.name==='QuotaExceededError' || e.code===22)){
+          throw new Error('Browser-Speicher ist voll. Die Playlist konnte nicht gespeichert werden.');
+        }
+        throw e;
+      }
+      this.log({type:'publish',screenId,count:payload.items?.length||0,campaign:payload.name||''});
+      return a[screenId];
     },
     getAssignment(id){return this.getAssignments()[id]||null},
     getImages(){return get('images',{})},

@@ -75,7 +75,11 @@
    activeDisplayId=id; $('screenSelect').value=id;
    const a=UniStore.getAssignment(id);
    if(a?.items?.length){
-     playlist=a.items.map(it=>({course:{...it.course},image:'',displayText:it.displayText||''}));
+     playlist=a.items.map(it=>({
+       course:compactCourse(it.course),
+       image:'',
+       displayText:it.displayText||''
+     }));
      $('campaignName').value=a.name||'UniPop Auswahl';
      $('duration').value=String(a.duration||14);
      $('showQR').checked=a.showQR!==false;
@@ -300,9 +304,43 @@
    }
  }
 
+ function compactCourse(c){
+   if(!c)return {};
+   return {
+     id:c.id||'',
+     code:c.code||'',
+     title:c.title||'',
+     subtitle:c.subtitle||'',
+     subject:c.subject||'',
+     description:c.description||'',
+     date:c.date||'',
+     startDate:c.startDate||'',
+     dateEnd:c.dateEnd||'',
+     time:c.time||'',
+     place:c.place||'',
+     trainer:c.trainer||'',
+     url:c.url||UNIPOP_CONFIG.qrFallback,
+     places:c.places??null,
+     registered:c.registered??null,
+     level:c.level||'',
+     language:c.language||'',
+     category:c.category||''
+   };
+ }
+
  function campaignPayload(){
-   const cleanItems=playlist.map(it=>({...it,image:''}));
-   return {name:$('campaignName').value.trim()||'UniPop Auswahl',items:cleanItems,duration:Number($('duration').value)||14,showQR:$('showQR').checked,showPrint:$('showPrint').checked};
+   const cleanItems=playlist.map(it=>({
+     course:compactCourse(it.course),
+     image:'',
+     displayText:it.displayText||''
+   }));
+   return {
+     name:$('campaignName').value.trim()||'UniPop Auswahl',
+     items:cleanItems,
+     duration:Number($('duration').value)||14,
+     showQR:$('showQR').checked,
+     showPrint:$('showPrint').checked
+   };
  }
  async function editingPayload(){
    if(!selected){
@@ -364,8 +402,19 @@
    if(!source||!target||source===target){alert('Bitte zwei verschiedene Standorte wählen.');return}
    const a=UniStore.getAssignment(source);
    if(!a?.items?.length){alert('Am Quell-Standort ist keine Playlist gespeichert.');return}
-   const clone=JSON.parse(JSON.stringify(a)); clone.name=(a.name||'UniPop Auswahl')+' – Kopie';
-   UniStore.setAssignment(target,clone); $('copyModal').classList.add('hidden'); renderDisplayCards();
+   const clone={
+     name:(a.name||'UniPop Auswahl')+' – Kopie',
+     duration:Number(a.duration)||14,
+     showQR:a.showQR!==false,
+     showPrint:a.showPrint!==false,
+     items:(a.items||[]).map(it=>({
+       course:compactCourse(it.course),
+       image:'',
+       displayText:it.displayText||''
+     }))
+   };
+   UniStore.setAssignment(target,clone);
+   $('copyModal').classList.add('hidden'); renderDisplayCards();
    $('screenSelect').value=target; loadDisplayPlaylist(target);
  };
 
@@ -433,6 +482,7 @@
  $('addToPlaylist').onclick=async()=>{
    if(!selected)return;
    const item=currentItem();
+   item.course=compactCourse(item.course);
 
    // Das eigentliche Bild bleibt ausschließlich in IndexedDB.
    // In Playlist/localStorage speichern wir KEIN Base64-Bild mehr.
@@ -460,10 +510,18 @@
    if(!playlist.length){alert('Bitte zuerst mindestens einen Kurs zur Playlist hinzufügen.');return}
    try{
      const target=$('screenSelect').value||activeDisplayId;
-     UniStore.setAssignment(target,campaignPayload());
+     const payload=campaignPayload();
+     UniStore.setAssignment(target,payload);
+
+     // Sofort kontrollieren, ob der Browser die Playlist wirklich gespeichert hat.
+     const check=UniStore.getAssignment(target);
+     if(!check?.items?.length || check.items.length!==payload.items.length){
+       throw new Error('Die Playlist konnte nicht dauerhaft im Browser gespeichert werden.');
+     }
+
      activeDisplayId=target;
      renderDisplayCards();
-     alert('Playlist für '+(displays.find(d=>d.id===target)?.name||target)+' gespeichert.');
+     alert('Playlist für '+(displays.find(d=>d.id===target)?.name||target)+' gespeichert ('+check.items.length+' Kurse).');
      refreshStats();
    }catch(e){
      console.error(e);
