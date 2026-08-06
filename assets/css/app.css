@@ -66,3 +66,15 @@ textarea.auto-textarea{
   line-height:1.45;
   box-sizing:border-box;
 }
+
+.archive-pill{
+  display:inline-block;
+  margin-top:7px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:#f2edf5;
+  color:#76258a;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.05em;
+}

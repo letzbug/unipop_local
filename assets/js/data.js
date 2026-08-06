@@ -79,10 +79,6 @@
         const courses=raw
           .filter(x=>x.organisateur?.code===cfg.organiserCode)
           .map(normalize)
-          .filter(c=>{
-            const d=c.startDate?new Date(c.startDate):null;
-            return !d || d>=today; // heute + Zukunft
-          })
           .sort((a,b)=>{
             const da=a.startDate?new Date(a.startDate).getTime():Number.MAX_SAFE_INTEGER;
             const db=b.startDate?new Date(b.startDate).getTime():Number.MAX_SAFE_INTEGER;

@@ -16,32 +16,72 @@
 
  try{
    courses=await UniData.loadCourses();
-   if(courses.length){
-     $('loadState').innerHTML=`<b>${courses.length} aktuelle/zukünftige UniPop-Kurse geladen</b><br><span class="note">Quelle: ${esc(window.UNIPOP_JSON_SOURCE||'trainings.json')}<br>Filter: organisateur.code = UNIPOP · Kursbeginn ab heute.</span>`;
-   }else{
-     const total=window.UNIPOP_JSON_UNIPOP_TOTAL??0;
-     $('loadState').innerHTML=`<b>trainings.json erfolgreich geladen – momentan 0 aktuelle/zukünftige UniPop-Kurse.</b><br><span class="note">Quelle: ${esc(window.UNIPOP_JSON_SOURCE||'trainings.json')}<br>${total} UniPop-Datensätze sind insgesamt in der Datei, aber keiner beginnt ab heute. Sobald die neue Kursrunde in trainings.json erscheint, wird sie automatisch angezeigt.</span>`;
-   }
-   selected=courses[0]||null;
+   const today=new Date(); today.setHours(0,0,0,0);
+   const currentCount=courses.filter(c=>!c.startDate || new Date(c.startDate)>=today).length;
+   $('loadState').innerHTML=`<b>trainings.json erfolgreich geladen – ${currentCount} aktuelle/zukünftige UniPop-Kurse.</b><br><span class="note">Quelle: ${esc(window.UNIPOP_JSON_SOURCE||'trainings.json')}<br>${courses.length} UniPop-Kurse insgesamt verfügbar. Bei einer Suche wird automatisch auch im Archiv gesucht.</span>`;
+   selected=(courses.find(c=>!c.startDate || new Date(c.startDate)>=today) || courses[0] || null);
  }catch(e){
    $('loadState').innerHTML=`<b>trainings.json konnte nicht geladen werden.</b><br><span class="note">${esc(e.message)}</span>`;console.error(e);return
  }
 
  function renderCourses(f=''){
-   const q=f.toLowerCase();
+   const q=f.trim().toLowerCase();
+   const today=new Date(); today.setHours(0,0,0,0);
+   const prevMonthStart=new Date(today.getFullYear(), today.getMonth()-1, 1, 0,0,0,0);
+
+   const matchesText=c=>(c.title+' '+c.code+' '+c.place+' '+c.subject+' '+c.description).toLowerCase().includes(q);
+   let visible;
+
+   if(!q){
+     // Standardansicht: nur heute + Zukunft.
+     visible=courses.filter(c=>{
+       const d=c.startDate?new Date(c.startDate):null;
+       return !d || d>=today;
+     });
+   }else{
+     // Suche: zuerst ab dem 1. des Vormonats.
+     visible=courses.filter(c=>{
+       if(!matchesText(c)) return false;
+       const d=c.startDate?new Date(c.startDate):null;
+       return !d || d>=prevMonthStart;
+     });
+
+     // Wenn kein Treffer: automatisch im gesamten Archiv suchen,
+     // damit weiterhin Content aus älteren Kursen erstellt werden kann.
+     if(!visible.length){
+       visible=courses.filter(matchesText);
+     }
+   }
+
+   visible.sort((a,b)=>{
+     const da=a.startDate?new Date(a.startDate).getTime():Number.MAX_SAFE_INTEGER;
+     const db=b.startDate?new Date(b.startDate).getTime():Number.MAX_SAFE_INTEGER;
+     return da-db || a.title.localeCompare(b.title,'fr');
+   });
+
    $('courseList').innerHTML='';
-   courses.filter(c=>(c.title+' '+c.code+' '+c.place+' '+c.subject).toLowerCase().includes(q)).slice(0,300).forEach(c=>{
+
+   visible.slice(0,300).forEach(c=>{
      const d=document.createElement('div');
+     const courseDate=c.startDate?new Date(c.startDate):null;
+     const archived=courseDate && courseDate<prevMonthStart;
      d.className='course-card'+(selected?.id===c.id?' active':'');
-     d.innerHTML=`<b>${esc(c.title)}</b><small>${esc(c.code)} · ${esc(c.subject)}</small><small>${esc(c.date)} · ${esc(c.place)}</small>`;
+     d.innerHTML=`<b>${esc(c.title)}</b>
+       <small>${esc(c.code)} · ${esc(c.subject)}</small>
+       <small>${esc(c.date)} · ${esc(c.place)}</small>
+       ${archived && q ? '<span class="archive-pill">ARCHIV</span>' : ''}`;
      d.onclick=()=>{
        selected=c;
        fill();
        renderCourses($('search').value);
-       updateEditingPreview(); // sofort den neu gewählten Kurs anzeigen
+       updateEditingPreview();
      };
      $('courseList').appendChild(d);
    });
+
+   if(!visible.length){
+     $('courseList').innerHTML='<div class="note">Keine passenden Kurse gefunden.</div>';
+   }
  }
 
  function fill(){
@@ -150,5 +190,5 @@
    UniStore.byCourse().slice(0,10).forEach(x=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(x.title)}</td><td>${esc(x.code)}</td><td>${x.total}</td>`;$('topTable').appendChild(tr)})
  }
 
- renderCourses(); if(selected){fill();updateEditingPreview();} else {$('courseList').innerHTML='<div class="note">Zurzeit keine UniPop-Kurse ab heute in trainings.json.</div>'; $('preview').src='about:blank';} renderPlaylist();refreshStats();setInterval(refreshStats,10000);
+ renderCourses(); if(selected){fill();updateEditingPreview();} else {$('courseList').innerHTML='<div class="note">Keine UniPop-Kurse in trainings.json.</div>'; $('preview').src='about:blank';} renderPlaylist();refreshStats();setInterval(refreshStats,10000);
 })();
