@@ -1,6 +1,6 @@
 (async function(){
  const qs=new URLSearchParams(location.search),screenId=qs.get('screen')||UNIPOP_CONFIG.defaultScreen,$=id=>document.getElementById(id);
- let assignment=UniStore.getAssignment(screenId),idx=0,current=null,currentQr='';
+ let assignment=await UniHybrid.getAssignment(screenId),idx=0,current=null,currentQr='';
  if(!assignment?.items?.length){try{const c=(await UniData.loadCourses())[0];assignment={name:'Auto',items:[{course:c,image:await UniImageStore.get(c.id)||'',displayText:UniData.shorten(c.description,245)}],duration:UNIPOP_CONFIG.slideSeconds,showQR:true,showPrint:true}}catch(e){return}}
  function qr(url){return 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=10&data='+encodeURIComponent(url||UNIPOP_CONFIG.qrFallback)}
  async function show(i){
@@ -9,9 +9,22 @@
    const image=it.image||await UniImageStore.get(c.id)||''; if(image){$('heroImg').src=image;$('heroImg').style.display='block';$('noImage').style.display='none'}else{$('heroImg').style.display='none';$('noImage').style.display='block'}
    $('qrImg').src=currentQr;$('qrArea').style.display=assignment.showQR===false?'none':'block';$('printBar').style.display=assignment.showPrint===false?'none':'flex';
    requestAnimationFrame(()=>window.UniDisplayFit&&window.UniDisplayFit());
-   UniStore.heartbeat(screenId,{courseCode:c.code,title:c.title,campaign:assignment.name||'',slide:i%assignment.items.length});
+   UniHybrid.heartbeat(screenId,{courseCode:c.code,title:c.title,campaign:assignment.name||'',slide:i%assignment.items.length});
  }
- await show(idx); const seconds=Math.max(5,Number(assignment.duration)||UNIPOP_CONFIG.slideSeconds); if(assignment.items.length>1)setInterval(async()=>{idx=(idx+1)%assignment.items.length;await show(idx)},seconds*1000);setInterval(()=>{if(current)UniStore.heartbeat(screenId,{courseCode:current.course.code,title:current.course.title,campaign:assignment.name||'',slide:idx})},30000);
+ await show(idx); const seconds=Math.max(5,Number(assignment.duration)||UNIPOP_CONFIG.slideSeconds); if(assignment.items.length>1)setInterval(async()=>{idx=(idx+1)%assignment.items.length;await show(idx)},seconds*1000);setInterval(()=>{if(current)UniHybrid.heartbeat(screenId,{courseCode:current.course.code,title:current.course.title,campaign:assignment.name||'',slide:idx})},30000);
+ const remoteRefresh=Math.max(10,Number(window.UNIPOP_SUPABASE?.refreshSeconds)||20);
+ setInterval(async()=>{
+   try{
+     const fresh=await UniHybrid.getAssignment(screenId);
+     const oldStamp=assignment?.publishedAt||'';
+     const newStamp=fresh?.publishedAt||'';
+     if(fresh?.items?.length && JSON.stringify(fresh)!==JSON.stringify(assignment)){
+       assignment=fresh;
+       idx=0;
+       await show(idx);
+     }
+   }catch(e){console.error('Display refresh failed',e)}
+ },remoteRefresh*1000);
  function doPrint(){
  if(assignment.showPrint===false||!current)return;
 
@@ -33,7 +46,7 @@
  }
 
  const c=current.course;
- UniStore.addPrint({screenId,courseCode:c.code,title:c.title});
+ UniHybrid.addPrint({screenId,courseCode:c.code,title:c.title});
 
  toast.textContent='Votre flyer est en cours d’impression…';
  toast.classList.add('show');

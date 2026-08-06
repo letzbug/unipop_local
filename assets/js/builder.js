@@ -3,14 +3,8 @@
  const esc=v=>String(v??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]||m));
  let courses=[],selected=null,playlist=[];
 
- let displays=UniStore.getDisplays();
- // Ensure the four standard locations always exist, without deleting user-created locations.
- const standardDisplays=cfg.screens||[];
- let displayListChanged=false;
- standardDisplays.forEach(sd=>{
-   if(!displays.some(d=>d.id===sd.id)){displays.push({...sd});displayListChanged=true}
- });
- if(displayListChanged) UniStore.saveDisplays(displays);
+ let displays=await UniHybrid.getDisplays(cfg.screens);
+
  function refillDisplaySelect(){
    const sel=$('screenSelect'),current=sel.value;
    sel.innerHTML='';
@@ -56,24 +50,25 @@
    requestAnimationFrame(()=>requestAnimationFrame(resizeTexts));
  }
 
- function renderDisplayCards(){
+ async async function renderDisplayCards(){
    const wrap=$('displayCards'); if(!wrap)return;
    wrap.innerHTML='';
-   displays.forEach(d=>{
-     const a=UniStore.getAssignment(d.id);
+   for(const d of displays){
+     const a=await UniHybrid.getAssignment(d.id);
      const el=document.createElement('button');
-     el.type='button'; el.className='display-card'+(d.id===activeDisplayId?' active':'');
+     el.type='button';
+     el.className='display-card'+(d.id===activeDisplayId?' active':'');
      el.innerHTML=`<span class="display-card-name">${esc(d.name)}</span>
        <span class="display-card-meta">${a?.items?.length ? a.items.length+' Kurse gespeichert' : 'Keine Playlist'}</span>
        <span class="display-card-url">display.html?screen=${esc(d.id)}</span>`;
      el.onclick=()=>loadDisplayPlaylist(d.id);
      wrap.appendChild(el);
-   });
+   }
  }
 
  async function loadDisplayPlaylist(id){
    activeDisplayId=id; $('screenSelect').value=id;
-   const a=UniStore.getAssignment(id);
+   const a=await UniHybrid.getAssignment(id);
    if(a?.items?.length){
      playlist=a.items.map(it=>({
        course:compactCourse(it.course),
@@ -91,7 +86,7 @@
      clearDraft();
      if(selected) await updateEditingPreview();
    }
-   renderDisplayCards();
+   await renderDisplayCards();
  }
 
  function refillCopySelects(){
@@ -389,32 +384,24 @@
 
  $('newDisplayBtn').onclick=()=>{$('newDisplayName').value='';$('displayModal').classList.remove('hidden')};
  $('cancelDisplayBtn').onclick=()=>$('displayModal').classList.add('hidden');
- $('saveDisplayBtn').onclick=()=>{
+ $('saveDisplayBtn').onclick=async()=>{
    const name=$('newDisplayName').value.trim(); if(!name)return;
-   const d=UniStore.addDisplay(name); displays=UniStore.getDisplays(); refillDisplaySelect();
-   $('screenSelect').value=d.id; $('displayModal').classList.add('hidden'); renderDisplayCards(); loadDisplayPlaylist(d.id);
+   const d=await UniHybrid.addDisplay(name); displays=await UniHybrid.getDisplays(cfg.screens); refillDisplaySelect();
+   $('screenSelect').value=d.id; $('displayModal').classList.add('hidden'); await renderDisplayCards(); loadDisplayPlaylist(d.id);
  };
 
  $('copyPlaylistBtn').onclick=()=>{refillCopySelects();$('copyModal').classList.remove('hidden')};
  $('cancelCopyBtn').onclick=()=>$('copyModal').classList.add('hidden');
- $('doCopyBtn').onclick=()=>{
+ $('doCopyBtn').onclick=async()=>{
    const source=$('copySource').value,target=$('copyTarget').value;
    if(!source||!target||source===target){alert('Bitte zwei verschiedene Standorte wählen.');return}
-   const a=UniStore.getAssignment(source);
-   if(!a?.items?.length){alert('Am Quell-Standort ist keine Playlist gespeichert.');return}
-   const clone={
-     name:(a.name||'UniPop Auswahl')+' – Kopie',
-     duration:Number(a.duration)||14,
-     showQR:a.showQR!==false,
-     showPrint:a.showPrint!==false,
-     items:(a.items||[]).map(it=>({
-       course:compactCourse(it.course),
-       image:'',
-       displayText:it.displayText||''
-     }))
-   };
-   UniStore.setAssignment(target,clone);
-   $('copyModal').classList.add('hidden'); renderDisplayCards();
+   try{
+     await UniHybrid.copyAssignment(source,target);
+   }catch(e){
+     alert(e.message||e);
+     return;
+   }
+   $('copyModal').classList.add('hidden'); await renderDisplayCards();
    $('screenSelect').value=target; loadDisplayPlaylist(target);
  };
 
@@ -506,21 +493,21 @@
    });
  });
 
- $('publish').onclick=()=>{
+ $('publish').onclick=async()=>{
    if(!playlist.length){alert('Bitte zuerst mindestens einen Kurs zur Playlist hinzufügen.');return}
    try{
      const target=$('screenSelect').value||activeDisplayId;
      const payload=campaignPayload();
-     UniStore.setAssignment(target,payload);
+     await UniHybrid.setAssignment(target,payload);
 
      // Sofort kontrollieren, ob der Browser die Playlist wirklich gespeichert hat.
-     const check=UniStore.getAssignment(target);
+     const check=await UniHybrid.getAssignment(target);
      if(!check?.items?.length || check.items.length!==payload.items.length){
        throw new Error('Die Playlist konnte nicht dauerhaft im Browser gespeichert werden.');
      }
 
      activeDisplayId=target;
-     renderDisplayCards();
+     await renderDisplayCards();
      alert('Playlist für '+(displays.find(d=>d.id===target)?.name||target)+' gespeichert ('+check.items.length+' Kurse).');
      refreshStats();
    }catch(e){
@@ -551,16 +538,41 @@
    })();
  };
 
- function refreshStats(){
-   const s=UniStore.stats();$('stToday').textContent=s.today;$('stWeek').textContent=s.week;$('stYear').textContent=s.year;$('stTotal').textContent=s.total;
-   const hb=UniStore.getHeartbeats();$('screenTable').innerHTML='';
+ async function refreshStats(){
+   const events=await UniHybrid.getPrintEvents();
+   const now=new Date(),day=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+   const week=new Date(day);week.setDate(week.getDate()-((week.getDay()+6)%7));
+   const year=new Date(now.getFullYear(),0,1);
+   const cnt=start=>events.filter(x=>new Date(x.created_at)>=start).length;
+   $('stToday').textContent=cnt(day);
+   $('stWeek').textContent=cnt(week);
+   $('stYear').textContent=cnt(year);
+   $('stTotal').textContent=events.length;
+
+   const statuses=await UniHybrid.getStatuses();
+   $('screenTable').innerHTML='';
    displays.forEach(sc=>{
-     const last=hb[sc.id]?.ts?new Date(hb[sc.id].ts):null,on=last&&(Date.now()-last<120000),tr=document.createElement('tr');
-     tr.innerHTML=`<td>${esc(sc.name)}</td><td><span class="status-dot ${on?'':'off'}"></span>${on?'ONLINE':'OFFLINE'}</td><td>${last?last.toLocaleString('fr-LU'):'—'}</td>`;$('screenTable').appendChild(tr)
+     const st=statuses.find(x=>x.display_slug===sc.id);
+     const last=st?.last_seen?new Date(st.last_seen):null;
+     const on=last&&(Date.now()-last.getTime()<120000);
+     const tr=document.createElement('tr');
+     tr.innerHTML=`<td>${esc(sc.name)}</td><td><span class="status-dot ${on?'':'off'}"></span>${on?'ONLINE':'OFFLINE'}</td><td>${last?last.toLocaleString('fr-LU'):'—'}</td>`;
+     $('screenTable').appendChild(tr);
+   });
+
+   const map={};
+   events.forEach(x=>{
+     const key=x.course_code||x.course_title||'—';
+     map[key]??={code:key,title:x.course_title||key,total:0};
+     map[key].total++;
    });
    $('topTable').innerHTML='';
-   UniStore.byCourse().slice(0,10).forEach(x=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(x.title)}</td><td>${esc(x.code)}</td><td>${x.total}</td>`;$('topTable').appendChild(tr)})
+   Object.values(map).sort((a,b)=>b.total-a.total).slice(0,10).forEach(x=>{
+     const tr=document.createElement('tr');
+     tr.innerHTML=`<td>${esc(x.title)}</td><td>${esc(x.code)}</td><td>${x.total}</td>`;
+     $('topTable').appendChild(tr);
+   });
  }
 
- clearDraft(); activeDisplayId=$('screenSelect').value||displays[0]?.id||''; renderDisplayCards(); renderCourses(); if(selected){await fill();updateEditingPreview();} else {$('courseList').innerHTML='<div class="note">Keine UniPop-Kurse in trainings.json.</div>'; $('preview').src='about:blank';} renderPlaylist();refreshStats();setInterval(refreshStats,10000);
+ clearDraft(); activeDisplayId=$('screenSelect').value||displays[0]?.id||''; await renderDisplayCards(); renderCourses(); if(selected){await fill();updateEditingPreview();} else {$('courseList').innerHTML='<div class="note">Keine UniPop-Kurse in trainings.json.</div>'; $('preview').src='about:blank';} renderPlaylist();refreshStats();setInterval(()=>refreshStats(),10000);
 })();
