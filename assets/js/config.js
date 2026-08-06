@@ -9,10 +9,12 @@ window.UNIPOP_CONFIG = {
   ],
 
   organiserCode: 'UNIPOP',
-  defaultScreen: 'commune-01',
+  defaultScreen: 'belval',
   screens: [
-    {id:'commune-01', name:'Commune – Écran 1', location:'Commune', enabled:true},
-    {id:'nouveau-site-01', name:'Nouveau site – Écran 1', location:'Nouveau site', enabled:true}
+    {id:'belval', name:'Belval', location:'Belval', enabled:true},
+    {id:'ettelbruck', name:'Ettelbrück', location:'Ettelbrück', enabled:true},
+    {id:'commune', name:'Commune', location:'Commune', enabled:true},
+    {id:'expo', name:'Expo', location:'Expo', enabled:true}
   ],
   slideSeconds: 14,
   printCooldownSeconds: 15,

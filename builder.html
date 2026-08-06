@@ -1,11 +1,42 @@
 <!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UniPop Display Builder</title><link rel="stylesheet" href="assets/css/app.css"></head><body>
 <div class="builder"><aside class="sidebar"><div class="brand">UniPop<small>Display Builder</small></div><nav class="side-nav"><a class="active" href="#builder">▣ Builder</a><a href="#stats">▥ Statistiken</a><a href="display.html" target="_blank">▢ Display</a></nav></aside>
 <main class="main"><header class="topbar"><div><h1>Display Building App</h1><p>UniPop-Kurse aus trainings.json auswählen, Playlist bauen und Screen zuweisen.</p></div><div class="actions"><button id="fullPreview" class="btn">Vorschau Vollbild</button><button id="publish" class="btn primary">Playlist veröffentlichen</button></div></header>
+
+<section class="panel display-manager-panel">
+  <div class="display-manager-head">
+    <div>
+      <h2>Displays / Standorte</h2>
+      <p class="note">Standort auswählen, vorhandene Playlist laden oder einen neuen Standort anlegen.</p>
+    </div>
+    <div class="display-manager-actions">
+      <button id="newDisplayBtn" class="btn">+ Neuer Standort</button>
+      <button id="copyPlaylistBtn" class="btn">Playlist kopieren</button>
+    </div>
+  </div>
+  <div id="displayCards" class="display-cards"></div>
+</section>
+
 <div id="loadState" class="panel" style="margin-bottom:16px">trainings.json wird geladen…</div>
 <section id="builder" class="builder-grid">
 <div class="panel"><h2>1. Kurse aus trainings.json</h2><div class="field"><input id="search" placeholder="Kurs, Code, Ort, Thema…"></div><div id="courseList" class="course-list"></div></div>
 <div class="panel"><h2>2. Gewählter Kurs</h2><div class="field"><label>Name</label><input id="title"></div><div class="field"><label>Kurscode</label><input id="code"></div><div class="field"><label>Datum</label><input id="date"></div><div class="field"><label>Uhrzeit</label><input id="time"></div><div class="field"><label>Ort</label><input id="place"></div><div class="field"><label>Formateur</label><input id="trainer"></div><h3>Original-Kurstext</h3><textarea id="originalText" class="auto-textarea" rows="1"></textarea><button id="shorten" class="btn" style="margin-top:8px">Text für Display kürzen</button><h3>Werbetext auf dem Display</h3><textarea id="displayText" class="auto-textarea" rows="1"></textarea><h3>Bild pro Kurs (optional)</h3><div class="upload-box"><img id="imgPrev" class="img-preview" src="assets/images/placeholder.svg"><input id="imageInput" type="file" accept="image/*"><div class="note" style="margin-top:6px">Bilder werden automatisch für das Display optimiert.</div><button id="removeImage" class="btn" style="margin-top:8px">Bild entfernen</button></div><button id="addToPlaylist" class="btn primary" style="width:100%;margin-top:12px">+ Zur Playlist hinzufügen / aktualisieren</button></div>
-<div class="panel"><h2>3. Playlist & Screen</h2><div class="field"><label>Name der Kampagne</label><input id="campaignName" value="UniPop Auswahl"></div><div class="field"><label>Ziel-Screen</label><select id="screenSelect"></select></div><div class="field"><label>Anzeigedauer pro Kurs</label><select id="duration"><option value="10">10 Sekunden</option><option value="14" selected>14 Sekunden</option><option value="20">20 Sekunden</option><option value="30">30 Sekunden</option></select></div><div class="option-row"><span>QR-Code anzeigen</span><input id="showQR" type="checkbox" checked></div><div class="option-row"><span>Druckfunktion anzeigen</span><input id="showPrint" type="checkbox" checked></div><h3>Playlist</h3><div id="playlist" class="course-list"></div><div class="preview-wrap" style="margin-top:14px"><iframe id="preview" class="preview-frame" src="display-preview.html"></iframe></div></div>
+<div class="panel"><h2>3. Playlist & Screen</h2><div class="field"><label>Name der Kampagne</label><input id="campaignName" value="UniPop Auswahl"></div><div class="field"><label>Aktiver Standort / Ziel-Screen</label><select id="screenSelect"></select></div><div class="field"><label>Anzeigedauer pro Kurs</label><select id="duration"><option value="10">10 Sekunden</option><option value="14" selected>14 Sekunden</option><option value="20">20 Sekunden</option><option value="30">30 Sekunden</option></select></div><div class="option-row"><span>QR-Code anzeigen</span><input id="showQR" type="checkbox" checked></div><div class="option-row"><span>Druckfunktion anzeigen</span><input id="showPrint" type="checkbox" checked></div><h3>Playlist</h3><div id="playlist" class="course-list"></div><div class="preview-wrap" style="margin-top:14px"><iframe id="preview" class="preview-frame" src="display-preview.html"></iframe></div></div>
 </section>
 <section id="stats"><div class="stats-row"><div class="stat"><span>Heute</span><b id="stToday">0</b></div><div class="stat"><span>Woche</span><b id="stWeek">0</b></div><div class="stat"><span>Jahr</span><b id="stYear">0</b></div><div class="stat"><span>Gesamt</span><b id="stTotal">0</b></div></div><div class="panel table-panel"><h2>Display-Status</h2><table class="table"><thead><tr><th>Display</th><th>Status</th><th>Letzter Kontakt</th></tr></thead><tbody id="screenTable"></tbody></table></div><div class="panel table-panel"><h2>Top-Kurse nach Drucken</h2><table class="table"><thead><tr><th>Kurs</th><th>Code</th><th>Drucke</th></tr></thead><tbody id="topTable"></tbody></table></div></section>
-</main></div><script src="assets/js/config.js"></script><script src="assets/js/store.js"></script><script src="assets/js/image-store.js"></script><script src="assets/js/data.js"></script><script src="assets/js/builder.js"></script></body></html>
+</main></div><script src="assets/js/config.js"></script><script src="assets/js/store.js"></script><script src="assets/js/image-store.js"></script><script src="assets/js/data.js"></script><script src="assets/js/builder.js"></script>
+<div id="displayModal" class="modal-backdrop hidden">
+ <div class="modal-card"><h2>Neuer Standort</h2>
+ <div class="field"><label>Name des Standorts</label><input id="newDisplayName" placeholder="z. B. Commune Niederanven"></div>
+ <div class="modal-actions"><button id="cancelDisplayBtn" class="btn">Abbrechen</button><button id="saveDisplayBtn" class="btn primary">Standort anlegen</button></div>
+ </div>
+</div>
+<div id="copyModal" class="modal-backdrop hidden">
+ <div class="modal-card"><h2>Playlist kopieren</h2>
+ <div class="field"><label>Quelle</label><select id="copySource"></select></div>
+ <div class="field"><label>Ziel</label><select id="copyTarget"></select></div>
+ <p class="note">Die Kopie ist danach unabhängig von der Quelle.</p>
+ <div class="modal-actions"><button id="cancelCopyBtn" class="btn">Abbrechen</button><button id="doCopyBtn" class="btn primary">Playlist kopieren</button></div>
+ </div>
+</div>
+
+</body></html>

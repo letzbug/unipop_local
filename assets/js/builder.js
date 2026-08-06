@@ -3,8 +3,15 @@
  const esc=v=>String(v??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]||m));
  let courses=[],selected=null,playlist=[];
 
- cfg.screens.forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.name;$('screenSelect').appendChild(o)});
- $('screenSelect').value=cfg.defaultScreen;
+ let displays=UniStore.getDisplays();
+ function refillDisplaySelect(){
+   const sel=$('screenSelect'),current=sel.value;
+   sel.innerHTML='';
+   displays.forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o)});
+   sel.value=displays.some(d=>d.id===current)?current:(displays[0]?.id||'');
+ }
+ refillDisplaySelect();
+ $('screenSelect').value=displays.some(d=>d.id===cfg.defaultScreen)?cfg.defaultScreen:(displays[0]?.id||'');
 
  function autoResize(el){
    if(!el) return;
@@ -13,6 +20,78 @@
    el.style.height=h+'px';
  }
  function resizeTexts(){autoResize($('originalText'));autoResize($('displayText'))}
+
+ let activeDisplayId=$('screenSelect').value||'';
+
+ function clearDraft(){
+   playlist=[];
+   $('campaignName').value='UniPop Auswahl';
+   $('duration').value='14';
+   $('showQR').checked=true;
+   $('showPrint').checked=true;
+   $('search').value='';
+   renderPlaylist();
+ }
+
+ async function fillFromPlaylistItem(it){
+   if(!it?.course)return;
+   selected={...it.course};
+   $('title').value=it.course.title||'';
+   $('code').value=it.course.code||'';
+   $('date').value=it.course.date||'';
+   $('time').value=it.course.time||'';
+   $('place').value=it.course.place||'';
+   $('trainer').value=it.course.trainer||'';
+   $('originalText').value=it.course.description||'';
+   $('displayText').value=it.displayText||UniData.shorten(it.course.description||'',245);
+   $('imgPrev').src=(await UniImageStore.get(it.course.id))||'assets/images/placeholder.svg';
+   $('imageInput').value='';
+   requestAnimationFrame(()=>requestAnimationFrame(resizeTexts));
+ }
+
+ function renderDisplayCards(){
+   const wrap=$('displayCards'); if(!wrap)return;
+   wrap.innerHTML='';
+   displays.forEach(d=>{
+     const a=UniStore.getAssignment(d.id);
+     const el=document.createElement('button');
+     el.type='button'; el.className='display-card'+(d.id===activeDisplayId?' active':'');
+     el.innerHTML=`<span class="display-card-name">${esc(d.name)}</span>
+       <span class="display-card-meta">${a?.items?.length ? a.items.length+' Kurse gespeichert' : 'Keine Playlist'}</span>
+       <span class="display-card-url">display.html?screen=${esc(d.id)}</span>`;
+     el.onclick=()=>loadDisplayPlaylist(d.id);
+     wrap.appendChild(el);
+   });
+ }
+
+ async function loadDisplayPlaylist(id){
+   activeDisplayId=id; $('screenSelect').value=id;
+   const a=UniStore.getAssignment(id);
+   if(a?.items?.length){
+     playlist=a.items.map(it=>({course:{...it.course},image:'',displayText:it.displayText||''}));
+     $('campaignName').value=a.name||'UniPop Auswahl';
+     $('duration').value=String(a.duration||14);
+     $('showQR').checked=a.showQR!==false;
+     $('showPrint').checked=a.showPrint!==false;
+     await fillFromPlaylistItem(playlist[0]);
+     renderPlaylist();
+     await refreshCampaignPreview();
+   }else{
+     clearDraft();
+     if(selected) await updateEditingPreview();
+   }
+   renderDisplayCards();
+ }
+
+ function refillCopySelects(){
+   ['copySource','copyTarget'].forEach(id=>{
+     const sel=$(id); sel.innerHTML='';
+     displays.forEach(d=>{const o=document.createElement('option');o.value=d.id;o.textContent=d.name;sel.appendChild(o)});
+   });
+   $('copySource').value=activeDisplayId||displays[0]?.id||'';
+   const alt=displays.find(d=>d.id!==$('copySource').value);
+   if(alt)$('copyTarget').value=alt.id;
+ }
 
  function compressImage(file,maxW=1600,maxH=900,quality=.84){
    return new Promise((resolve,reject)=>{
@@ -163,25 +242,8 @@
        </div>`;
 
      const openForEdit=async()=>{
-       // Playlist-Daten werden zurück in den Editor geladen.
-       selected={...it.course};
+       await fillFromPlaylistItem(it);
 
-       $('title').value=it.course.title||'';
-       $('code').value=it.course.code||'';
-       $('date').value=it.course.date||'';
-       $('time').value=it.course.time||'';
-       $('place').value=it.course.place||'';
-       $('trainer').value=it.course.trainer||'';
-       $('originalText').value=it.course.description||'';
-       $('displayText').value=it.displayText||UniData.shorten(it.course.description||'',245);
-
-       // Playlist-Bild hat Vorrang, danach IndexedDB.
-       let img=it.image||'';
-       if(!img) img=await UniImageStore.get(it.course.id)||'';
-       $('imgPrev').src=img||'assets/images/placeholder.svg';
-       $('imageInput').value='';
-
-       requestAnimationFrame(()=>requestAnimationFrame(resizeTexts));
        renderCourses($('search').value);
        renderPlaylist();
        updateEditingPreview();
@@ -278,6 +340,28 @@
    $('preview').src='display-preview.html?t='+Date.now();
  }
 
+ $('screenSelect').addEventListener('change',()=>loadDisplayPlaylist($('screenSelect').value));
+
+ $('newDisplayBtn').onclick=()=>{$('newDisplayName').value='';$('displayModal').classList.remove('hidden')};
+ $('cancelDisplayBtn').onclick=()=>$('displayModal').classList.add('hidden');
+ $('saveDisplayBtn').onclick=()=>{
+   const name=$('newDisplayName').value.trim(); if(!name)return;
+   const d=UniStore.addDisplay(name); displays=UniStore.getDisplays(); refillDisplaySelect();
+   $('screenSelect').value=d.id; $('displayModal').classList.add('hidden'); renderDisplayCards(); loadDisplayPlaylist(d.id);
+ };
+
+ $('copyPlaylistBtn').onclick=()=>{refillCopySelects();$('copyModal').classList.remove('hidden')};
+ $('cancelCopyBtn').onclick=()=>$('copyModal').classList.add('hidden');
+ $('doCopyBtn').onclick=()=>{
+   const source=$('copySource').value,target=$('copyTarget').value;
+   if(!source||!target||source===target){alert('Bitte zwei verschiedene Standorte wählen.');return}
+   const a=UniStore.getAssignment(source);
+   if(!a?.items?.length){alert('Am Quell-Standort ist keine Playlist gespeichert.');return}
+   const clone=JSON.parse(JSON.stringify(a)); clone.name=(a.name||'UniPop Auswahl')+' – Kopie';
+   UniStore.setAssignment(target,clone); $('copyModal').classList.add('hidden'); renderDisplayCards();
+   $('screenSelect').value=target; loadDisplayPlaylist(target);
+ };
+
  $('search').oninput=e=>renderCourses(e.target.value);
  $('shorten').onclick=()=>{
    $('displayText').value=UniData.shorten($('originalText').value,245);
@@ -368,8 +452,11 @@
  $('publish').onclick=()=>{
    if(!playlist.length){alert('Bitte zuerst mindestens einen Kurs zur Playlist hinzufügen.');return}
    try{
-     UniStore.setAssignment($('screenSelect').value,campaignPayload());
-     alert('Playlist gespeichert. Für die echte Fernübertragung zum Display wird später das Backend angeschlossen.');
+     const target=$('screenSelect').value||activeDisplayId;
+     UniStore.setAssignment(target,campaignPayload());
+     activeDisplayId=target;
+     renderDisplayCards();
+     alert('Playlist für '+(displays.find(d=>d.id===target)?.name||target)+' gespeichert.');
      refreshStats();
    }catch(e){
      console.error(e);
@@ -402,7 +489,7 @@
  function refreshStats(){
    const s=UniStore.stats();$('stToday').textContent=s.today;$('stWeek').textContent=s.week;$('stYear').textContent=s.year;$('stTotal').textContent=s.total;
    const hb=UniStore.getHeartbeats();$('screenTable').innerHTML='';
-   cfg.screens.forEach(sc=>{
+   displays.forEach(sc=>{
      const last=hb[sc.id]?.ts?new Date(hb[sc.id].ts):null,on=last&&(Date.now()-last<120000),tr=document.createElement('tr');
      tr.innerHTML=`<td>${esc(sc.name)}</td><td><span class="status-dot ${on?'':'off'}"></span>${on?'ONLINE':'OFFLINE'}</td><td>${last?last.toLocaleString('fr-LU'):'—'}</td>`;$('screenTable').appendChild(tr)
    });
@@ -410,5 +497,5 @@
    UniStore.byCourse().slice(0,10).forEach(x=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(x.title)}</td><td>${esc(x.code)}</td><td>${x.total}</td>`;$('topTable').appendChild(tr)})
  }
 
- renderCourses(); if(selected){await fill();updateEditingPreview();} else {$('courseList').innerHTML='<div class="note">Keine UniPop-Kurse in trainings.json.</div>'; $('preview').src='about:blank';} renderPlaylist();refreshStats();setInterval(refreshStats,10000);
+ clearDraft(); activeDisplayId=$('screenSelect').value||displays[0]?.id||''; renderDisplayCards(); renderCourses(); if(selected){await fill();updateEditingPreview();} else {$('courseList').innerHTML='<div class="note">Keine UniPop-Kurse in trainings.json.</div>'; $('preview').src='about:blank';} renderPlaylist();refreshStats();setInterval(refreshStats,10000);
 })();
