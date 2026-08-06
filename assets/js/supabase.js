@@ -15,19 +15,30 @@ window.UniRemote = (function(){
   async function req(path,opts={}){
     if(!enabled()) throw new Error('Supabase nicht konfiguriert');
     const url=C.url.replace(/\/$/,'')+'/rest/v1/'+path;
-    const r=await fetch(url,{
-      method:opts.method||'GET',
-      headers:headers(opts.headers||{}),
-      body:opts.body!==undefined?JSON.stringify(opts.body):undefined,
-      cache:'no-store'
-    });
-    if(!r.ok){
-      const txt=await r.text().catch(()=> '');
-      throw new Error('Supabase '+r.status+(txt?' – '+txt:''));
+    const controller=new AbortController();
+    const timeoutMs=Math.max(1500,Number(opts.timeoutMs)||4500);
+    const timer=setTimeout(()=>controller.abort(),timeoutMs);
+    try{
+      const r=await fetch(url,{
+        method:opts.method||'GET',
+        headers:headers(opts.headers||{}),
+        body:opts.body!==undefined?JSON.stringify(opts.body):undefined,
+        cache:'no-store',
+        signal:controller.signal
+      });
+      if(!r.ok){
+        const txt=await r.text().catch(()=> '');
+        throw new Error('Supabase '+r.status+(txt?' – '+txt:''));
+      }
+      if(r.status===204) return null;
+      const t=await r.text();
+      return t?JSON.parse(t):null;
+    }catch(e){
+      if(e?.name==='AbortError') throw new Error('Supabase timeout');
+      throw e;
+    }finally{
+      clearTimeout(timer);
     }
-    if(r.status===204) return null;
-    const t=await r.text();
-    return t?JSON.parse(t):null;
   }
 
   function esc(v){return encodeURIComponent(String(v??''))}
@@ -138,6 +149,52 @@ window.UniRemote = (function(){
     return setAssignment(target,a);
   }
 
+
+  function imagePath(courseId){
+    return encodeURIComponent(String(courseId||'course'));
+  }
+
+  function getPublicImageUrl(courseId){
+    if(!enabled()) return '';
+    return C.url.replace(/\/$/,'')+
+      '/storage/v1/object/public/course-images/'+imagePath(courseId);
+  }
+
+  async function uploadImage(courseId,dataUrl){
+    if(!enabled()) throw new Error('Supabase nicht konfiguriert');
+    if(!dataUrl) throw new Error('Kein Bild vorhanden');
+
+    const blob=await (await fetch(dataUrl)).blob();
+    const url=C.url.replace(/\/$/,'')+
+      '/storage/v1/object/course-images/'+imagePath(courseId);
+
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),10000);
+    try{
+      const r=await fetch(url,{
+        method:'POST',
+        headers:{
+          apikey:C.anonKey,
+          Authorization:'Bearer '+C.anonKey,
+          'Content-Type':blob.type||'image/jpeg',
+          'x-upsert':'true'
+        },
+        body:blob,
+        signal:controller.signal
+      });
+      if(!r.ok){
+        const txt=await r.text().catch(()=> '');
+        throw new Error('Bild-Upload '+r.status+(txt?' – '+txt:''));
+      }
+      return getPublicImageUrl(courseId)+'?v='+Date.now();
+    }catch(e){
+      if(e?.name==='AbortError') throw new Error('Bild-Upload Timeout');
+      throw e;
+    }finally{
+      clearTimeout(timer);
+    }
+  }
+
   return {
     enabled,
     getDisplays,
@@ -149,6 +206,8 @@ window.UniRemote = (function(){
     getStatuses,
     addPrint,
     getPrintEvents,
-    copyAssignment
+    copyAssignment,
+    uploadImage,
+    getPublicImageUrl
   };
 })();

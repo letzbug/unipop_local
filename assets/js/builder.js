@@ -3,7 +3,14 @@
  const esc=v=>String(v??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]||m));
  let courses=[],selected=null,playlist=[];
 
- let displays=await UniHybrid.getDisplays(cfg.screens);
+ let displays=UniStore.getDisplays();
+ const standardDisplays=cfg.screens||[];
+ let displayListChanged=false;
+ standardDisplays.forEach(sd=>{
+   if(!displays.some(d=>d.id===sd.id)){displays.push({...sd});displayListChanged=true}
+ });
+ if(displayListChanged) UniStore.saveDisplays(displays);
+
 
  function refillDisplaySelect(){
    const sel=$('screenSelect'),current=sel.value;
@@ -45,12 +52,14 @@
    $('trainer').value=it.course.trainer||'';
    $('originalText').value=it.course.description||'';
    $('displayText').value=it.displayText||UniData.shorten(it.course.description||'',245);
-   $('imgPrev').src=(await UniImageStore.get(it.course.id))||'assets/images/placeholder.svg';
+   selected._remoteImageUrl=it.imageUrl||UniHybrid.getRemoteImageUrl(it.course.id)||'';
+   const localImg=await UniImageStore.get(it.course.id)||'';
+   $('imgPrev').src=localImg||selected._remoteImageUrl||'assets/images/placeholder.svg';
    $('imageInput').value='';
    requestAnimationFrame(()=>requestAnimationFrame(resizeTexts));
  }
 
- async async function renderDisplayCards(){
+ async function renderDisplayCards(){
    const wrap=$('displayCards'); if(!wrap)return;
    wrap.innerHTML='';
    for(const d of displays){
@@ -73,6 +82,7 @@
      playlist=a.items.map(it=>({
        course:compactCourse(it.course),
        image:'',
+       imageUrl:it.imageUrl||UniHybrid.getRemoteImageUrl(it.course?.id)||'',
        displayText:it.displayText||''
      }));
      $('campaignName').value=a.name||'UniPop Auswahl';
@@ -132,6 +142,19 @@
    const currentCount=courses.filter(c=>!c.startDate || new Date(c.startDate)>=today).length;
    $('loadState').innerHTML=`<b>trainings.json live geladen – ${currentCount} aktuelle/zukünftige UniPop-Kurse.</b><br><span class="note">Quelle: Franks Magic / main<br>${courses.length} UniPop-Kurse insgesamt verfügbar. Bei einer Suche wird automatisch auch im Archiv gesucht.</span>`;
    selected=(courses.find(c=>!c.startDate || new Date(c.startDate)>=today) || courses[0] || null);
+
+   (async()=>{
+     try{
+       const remoteDisplays=await UniHybrid.getDisplays(cfg.screens);
+       if(Array.isArray(remoteDisplays) && remoteDisplays.length){
+         displays=remoteDisplays;
+         refillDisplaySelect();
+         await renderDisplayCards();
+       }
+     }catch(err){
+       console.warn('Supabase display sync skipped',err);
+     }
+   })();
  }catch(e){
    $('loadState').innerHTML=`<b>trainings.json konnte nicht geladen werden.</b><br><span class="note">${esc(e.message)}</span>`;console.error(e);return
  }
@@ -206,7 +229,8 @@
    $('trainer').value=selected.trainer;
    $('originalText').value=selected.description;
    $('displayText').value=UniData.shorten(selected.description,245);
-   $('imgPrev').src=(await UniImageStore.get(selected.id))||'assets/images/placeholder.svg';
+   selected._remoteImageUrl=selected._remoteImageUrl||UniHybrid.getRemoteImageUrl(selected.id)||'';
+   $('imgPrev').src=(await UniImageStore.get(selected.id))||selected._remoteImageUrl||'assets/images/placeholder.svg';
    // Wichtig: Datei-Input beim Kurswechsel zurücksetzen.
    // Sonst feuert "change" bei einem weiteren Upload je nach Browser nicht zuverlässig.
    $('imageInput').value='';
@@ -225,6 +249,7 @@
        description:$('originalText').value.trim()
      },
      image:'',
+     imageUrl:selected?._remoteImageUrl||UniHybrid.getRemoteImageUrl(selected?.id)||'',
      displayText:$('displayText').value.trim()
    };
  }
@@ -327,6 +352,7 @@
    const cleanItems=playlist.map(it=>({
      course:compactCourse(it.course),
      image:'',
+     imageUrl:it.imageUrl||UniHybrid.getRemoteImageUrl(it.course?.id)||'',
      displayText:it.displayText||''
    }));
    return {
@@ -350,6 +376,7 @@
 
    const item=currentItem();
    item.image=await UniImageStore.get(selected.id)||'';
+   item.imageUrl=item.imageUrl||UniHybrid.getRemoteImageUrl(selected.id)||'';
 
    return {
      name:'Vorschau',
@@ -447,7 +474,10 @@
        });
      }
 
-     await UniImageStore.set(courseId,dataUrl);
+     const remoteUrl=await UniHybrid.saveCourseImage(courseId,dataUrl);
+     if(selected && selected.id===courseId && remoteUrl){
+       selected._remoteImageUrl=remoteUrl;
+     }
 
      if(selected && selected.id===courseId){
        $('imgPrev').src=dataUrl;
@@ -471,9 +501,9 @@
    const item=currentItem();
    item.course=compactCourse(item.course);
 
-   // Das eigentliche Bild bleibt ausschließlich in IndexedDB.
-   // In Playlist/localStorage speichern wir KEIN Base64-Bild mehr.
+   // Kein Base64 in der Playlist. Remote-URL verweist auf Supabase Storage.
    item.image='';
+   item.imageUrl=item.imageUrl||UniHybrid.getRemoteImageUrl(selected.id)||'';
 
    const existingIndex=playlist.findIndex(x=>x.course.id===selected.id);
    if(existingIndex>=0){

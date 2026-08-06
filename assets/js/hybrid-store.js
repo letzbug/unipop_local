@@ -2,47 +2,64 @@ window.UniHybrid = (function(){
   const remote=()=>window.UniRemote?.enabled?.();
 
   async function getDisplays(defaults){
+    let local=UniStore.getDisplays();
+    const existing=new Set(local.map(x=>x.id));
+    let changed=false;
+    (defaults||[]).forEach(d=>{
+      if(!existing.has(d.id)){local.push({...d});changed=true}
+    });
+    if(changed) UniStore.saveDisplays(local);
+
     if(remote()){
       try{
-        const rows=await UniRemote.ensureDefaultDisplays(defaults);
-        return rows.map(r=>({
-          id:r.slug,name:r.name,location:r.location||r.name,enabled:r.enabled!==false
-        }));
-      }catch(e){
-        console.error('Remote displays failed',e);
-      }
-    }
-    return UniStore.getDisplays();
-  }
-
-  async function addDisplay(name){
-    const local=UniStore.addDisplay(name);
-    if(remote()){
-      try{await UniRemote.addDisplay(local)}
-      catch(e){console.error('Remote addDisplay failed',e)}
+        const rows=await Promise.race([
+          UniRemote.ensureDefaultDisplays(defaults),
+          new Promise((_,rej)=>setTimeout(()=>rej(new Error('Supabase display timeout')),5000))
+        ]);
+        if(Array.isArray(rows) && rows.length){
+          const mapped=rows.map(r=>({id:r.slug,name:r.name,location:r.location||r.name,enabled:r.enabled!==false}));
+          UniStore.saveDisplays(mapped);
+          return mapped;
+        }
+      }catch(e){ console.warn('Remote displays unavailable, local fallback',e); }
     }
     return local;
   }
 
+  async function addDisplay(name){
+    const local=UniStore.addDisplay(name);
+    if(remote()) UniRemote.addDisplay(local).catch(e=>console.warn('Remote addDisplay failed',e));
+    return local;
+  }
+
   async function getAssignment(id){
+    const local=UniStore.getAssignment(id);
     if(remote()){
       try{
-        const r=await UniRemote.getAssignment(id);
-        if(r)return r;
-      }catch(e){console.error('Remote getAssignment failed',e)}
+        const r=await Promise.race([
+          UniRemote.getAssignment(id),
+          new Promise((_,rej)=>setTimeout(()=>rej(new Error('Supabase assignment timeout')),4500))
+        ]);
+        if(r){
+          try{ UniStore.setAssignment(id,r); }catch(_){}
+          return r;
+        }
+      }catch(e){ console.warn('Remote assignment failed, local fallback',e); }
     }
-    return UniStore.getAssignment(id);
+    return local;
   }
 
   async function setAssignment(id,payload){
-    // always preserve local fallback
     UniStore.setAssignment(id,payload);
-
     if(remote()){
-      try{return await UniRemote.setAssignment(id,payload)}
-      catch(e){
-        console.error('Remote setAssignment failed',e);
-        if(!window.UNIPOP_SUPABASE.localFallback) throw e;
+      try{
+        return await Promise.race([
+          UniRemote.setAssignment(id,payload),
+          new Promise((_,rej)=>setTimeout(()=>rej(new Error('Supabase save timeout')),5500))
+        ]);
+      }catch(e){
+        console.warn('Remote save failed, local copy kept',e);
+        if(!window.UNIPOP_SUPABASE?.localFallback) throw e;
       }
     }
     return UniStore.getAssignment(id);
@@ -56,41 +73,65 @@ window.UniHybrid = (function(){
     return setAssignment(target,clone);
   }
 
-  async function heartbeat(id,extra){
+  function heartbeat(id,extra){
     UniStore.heartbeat(id,extra);
-    if(remote()){
-      try{await UniRemote.heartbeat(id,extra)}
-      catch(e){console.error('Remote heartbeat failed',e)}
-    }
+    if(remote()) UniRemote.heartbeat(id,extra).catch(e=>console.warn('Remote heartbeat failed',e));
   }
 
-  async function addPrint(evt){
+  function addPrint(evt){
     UniStore.addPrint(evt);
-    if(remote()){
-      try{await UniRemote.addPrint(evt)}
-      catch(e){console.error('Remote print failed',e)}
-    }
+    if(remote()) UniRemote.addPrint(evt).catch(e=>console.warn('Remote print failed',e));
   }
 
   async function getStatuses(){
-    if(remote()){
-      try{return await UniRemote.getStatuses()}
-      catch(e){console.error('Remote statuses failed',e)}
-    }
-    return Object.entries(UniStore.getHeartbeats()).map(([display_slug,v])=>({
+    const local=Object.entries(UniStore.getHeartbeats()).map(([display_slug,v])=>({
       display_slug,last_seen:v.ts,course_code:v.courseCode,course_title:v.title,campaign:v.campaign,slide_index:v.slide
     }));
+    if(remote()){
+      try{
+        return await Promise.race([
+          UniRemote.getStatuses(),
+          new Promise((_,rej)=>setTimeout(()=>rej(new Error('Supabase status timeout')),4500))
+        ]);
+      }catch(e){ console.warn('Remote statuses failed, local fallback',e); }
+    }
+    return local;
   }
 
   async function getPrintEvents(){
-    if(remote()){
-      try{return await UniRemote.getPrintEvents()}
-      catch(e){console.error('Remote prints failed',e)}
-    }
-    return UniStore.getPrints().map(x=>({
+    const local=UniStore.getPrints().map(x=>({
       display_slug:x.screenId,course_code:x.courseCode,course_title:x.title,created_at:x.ts
     }));
+    if(remote()){
+      try{
+        return await Promise.race([
+          UniRemote.getPrintEvents(),
+          new Promise((_,rej)=>setTimeout(()=>rej(new Error('Supabase print timeout')),4500))
+        ]);
+      }catch(e){ console.warn('Remote prints failed, local fallback',e); }
+    }
+    return local;
   }
 
-  return {remote,getDisplays,addDisplay,getAssignment,setAssignment,copyAssignment,heartbeat,addPrint,getStatuses,getPrintEvents};
+
+  async function saveCourseImage(courseId,dataUrl){
+    // Always keep local preview copy.
+    await UniImageStore.set(courseId,dataUrl);
+
+    if(remote()){
+      try{
+        return await UniRemote.uploadImage(courseId,dataUrl);
+      }catch(e){
+        console.warn('Remote image upload failed; local copy kept',e);
+        if(!window.UNIPOP_SUPABASE?.localFallback) throw e;
+      }
+    }
+    return '';
+  }
+
+  function getRemoteImageUrl(courseId){
+    return remote() ? UniRemote.getPublicImageUrl(courseId) : '';
+  }
+
+  return {remote,getDisplays,addDisplay,getAssignment,setAssignment,copyAssignment,heartbeat,addPrint,getStatuses,getPrintEvents,saveCourseImage,getRemoteImageUrl};
 })();

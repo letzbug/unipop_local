@@ -39,7 +39,7 @@
     $('dTrainer').textContent=c.trainer||'UniPop';
     $('dCode').textContent='Code : '+(c.code||'—');
 
-    let im=it.image||'';
+    let im=it.imageUrl||it.image||'';
     if(!im){
       try{im=await UniImageStore.get(c.id)||''}
       catch(e){console.error(e)}
@@ -78,7 +78,7 @@
 
     (async()=>{
       try{
-        const image=await UniImageStore.get(c.id)||'';
+        const image=current.imageUrl||await UniImageStore.get(c.id)||'';
         const logoUrl=new URL('assets/images/unipop-logo.png',location.href).href;
         const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({
           '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'

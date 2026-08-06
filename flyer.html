@@ -78,7 +78,7 @@
   $('fQr').src=p.qrUrl||'';
 
   try{
-    const image=await UniImageStore.get(p.courseId||c.id);
+    const image=p.imageUrl||await UniImageStore.get(p.courseId||c.id);
     if(image){
       $('fImage').src=image;
       $('fImage').style.display='block';
