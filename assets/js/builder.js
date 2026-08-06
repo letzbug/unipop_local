@@ -45,7 +45,7 @@
    courses=await UniData.loadCourses();
    const today=new Date(); today.setHours(0,0,0,0);
    const currentCount=courses.filter(c=>!c.startDate || new Date(c.startDate)>=today).length;
-   $('loadState').innerHTML=`<b>trainings.json erfolgreich geladen – ${currentCount} aktuelle/zukünftige UniPop-Kurse.</b><br><span class="note">Quelle: ${esc(window.UNIPOP_JSON_SOURCE||'trainings.json')}<br>${courses.length} UniPop-Kurse insgesamt verfügbar. Bei einer Suche wird automatisch auch im Archiv gesucht.</span>`;
+   $('loadState').innerHTML=`<b>trainings.json live geladen – ${currentCount} aktuelle/zukünftige UniPop-Kurse.</b><br><span class="note">Quelle: Franks Magic / main · SHA: ${esc((window.UNIPOP_JSON_SHA||'').slice(0,10)||'—')}<br>${courses.length} UniPop-Kurse insgesamt verfügbar. Bei einer Suche wird automatisch auch im Archiv gesucht.</span>`;
    selected=(courses.find(c=>!c.startDate || new Date(c.startDate)>=today) || courses[0] || null);
  }catch(e){
    $('loadState').innerHTML=`<b>trainings.json konnte nicht geladen werden.</b><br><span class="note">${esc(e.message)}</span>`;console.error(e);return
