@@ -7,9 +7,10 @@
  $('screenSelect').value=cfg.defaultScreen;
 
  function autoResize(el){
-   if(!el)return;
-   el.style.height='auto';
-   el.style.height=Math.max(54,el.scrollHeight+2)+'px';
+   if(!el) return;
+   el.style.height='0px';
+   const h=Math.max(46, el.scrollHeight + 2);
+   el.style.height=h+'px';
  }
  function resizeTexts(){autoResize($('originalText'));autoResize($('displayText'))}
 
@@ -18,7 +19,7 @@
    $('loadState').innerHTML=`<b>${courses.length} aktuelle/zukünftige UniPop-Kurse geladen</b><br><span class="note">Quelle: ${esc(window.UNIPOP_JSON_SOURCE||'trainings.json')}<br>Es werden nur Kurse ab heute angezeigt.</span>`;
    selected=courses[0]||null;
  }catch(e){
-   $('loadState').innerHTML=`<b>trainings.json konnte nicht geladen werden.</b><br><span class="note">${esc(e.message)}</span>`;return
+   $('loadState').innerHTML=`<b>trainings.json konnte nicht geladen werden.</b><br><span class="note">${esc(e.message)}</span>`;console.error(e);return
  }
 
  function renderCourses(f=''){
@@ -49,7 +50,7 @@
    $('originalText').value=selected.description;
    $('displayText').value=UniData.shorten(selected.description,245);
    $('imgPrev').src=UniStore.getImage(selected.id)||'assets/images/placeholder.svg';
-   requestAnimationFrame(resizeTexts);
+   requestAnimationFrame(()=>requestAnimationFrame(resizeTexts));
  }
 
  function currentItem(){
@@ -100,7 +101,7 @@
  $('search').oninput=e=>renderCourses(e.target.value);
  $('shorten').onclick=()=>{
    $('displayText').value=UniData.shorten($('originalText').value,245);
-   resizeTexts();
+   requestAnimationFrame(()=>autoResize($('displayText')));
    updateEditingPreview();
  };
  ['originalText','displayText'].forEach(id=>$(id).addEventListener('input',()=>{autoResize($(id));updateEditingPreview()}));

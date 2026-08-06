@@ -55,3 +55,14 @@
   .ddesc{height:11vh!important}
   .dmeta{top:44vh!important}
 }
+
+/* v6: Textfelder passen sich exakt dem Inhalt an */
+.field textarea,
+textarea.auto-textarea{
+  min-height:46px !important;
+  height:46px;
+  overflow:hidden !important;
+  resize:none !important;
+  line-height:1.45;
+  box-sizing:border-box;
+}

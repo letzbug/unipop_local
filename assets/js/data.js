@@ -62,7 +62,7 @@
     };
   }
   async function fetchOne(url){
-    const r=await fetch(url,{cache:'no-store',headers:{'Accept':'application/json,text/plain,*/*'}});
+    const r=await fetch(url,{cache:'no-store',mode:'cors',credentials:'omit',headers:{'Accept':'application/json,text/plain,*/*'}});
     if(!r.ok) throw new Error('HTTP '+r.status);
     const text=await r.text();
     let d; try{d=JSON.parse(text)}catch(e){throw new Error('Antwort ist kein gültiges JSON')}
@@ -91,7 +91,7 @@
         if(courses.length){window.UNIPOP_JSON_SOURCE=url;return courses}
       }catch(e){lastErr=e;console.warn('trainings.json failed:',url,e)}
     }
-    throw lastErr||new Error('trainings.json konnte nicht geladen werden');
+    throw new Error((lastErr?.message||'Unbekannter Fehler')+' | Quelle: '+(cfg.jsonUrls?.[0]||'keine'));
   }
   function shorten(text,max=245){
     const t=cleanHtml(text);
