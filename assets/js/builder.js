@@ -204,6 +204,7 @@
        if(i>0){
          [playlist[i-1],playlist[i]]=[playlist[i],playlist[i-1]];
          renderPlaylist();
+         refreshCampaignPreview();
        }
      };
      d.querySelector('[data-a=down]').onclick=e=>{
@@ -211,12 +212,15 @@
        if(i<playlist.length-1){
          [playlist[i+1],playlist[i]]=[playlist[i],playlist[i+1]];
          renderPlaylist();
+         refreshCampaignPreview();
        }
      };
      d.querySelector('[data-a=del]').onclick=e=>{
        e.stopPropagation();
        playlist.splice(i,1);
        renderPlaylist();
+       if(playlist.length) refreshCampaignPreview();
+       else updateEditingPreview();
      };
 
      $('playlist').appendChild(d);
@@ -268,6 +272,10 @@
    const p=playlist.length?campaignPayload():await editingPayload();
    sessionStorage.setItem('unipop_preview_assignment',JSON.stringify(p));
    localStorage.setItem('unipop_preview_assignment',JSON.stringify(p));
+ }
+ async function refreshCampaignPreview(){
+   await updateCampaignPreview();
+   $('preview').src='display-preview.html?t='+Date.now();
  }
 
  $('search').oninput=e=>renderCourses(e.target.value);
@@ -347,10 +355,15 @@
    }
 
    renderPlaylist();
-   updateEditingPreview();
+   await refreshCampaignPreview();
  };
 
- ['duration','showQR','showPrint'].forEach(id=>{$(id).addEventListener('change',updateEditingPreview)});
+ ['duration','showQR','showPrint'].forEach(id=>{
+   $(id).addEventListener('change',()=>{
+     if(playlist.length) refreshCampaignPreview();
+     else updateEditingPreview();
+   });
+ });
 
  $('publish').onclick=()=>{
    if(!playlist.length){alert('Bitte zuerst mindestens einen Kurs zur Playlist hinzufügen.');return}
