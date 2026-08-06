@@ -258,6 +258,7 @@
    try{
      const previewPayload=await editingPayload();
      sessionStorage.setItem('unipop_preview_assignment',JSON.stringify(previewPayload));
+     localStorage.setItem('unipop_preview_assignment',JSON.stringify(previewPayload));
      $('preview').src='display-preview.html?t='+Date.now();
    }catch(e){
      console.error('Preview storage error',e);
@@ -266,6 +267,7 @@
  async function updateCampaignPreview(){
    const p=playlist.length?campaignPayload():await editingPayload();
    sessionStorage.setItem('unipop_preview_assignment',JSON.stringify(p));
+   localStorage.setItem('unipop_preview_assignment',JSON.stringify(p));
  }
 
  $('search').oninput=e=>renderCourses(e.target.value);

@@ -67,7 +67,7 @@
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:#fff;font-family:Arial,Helvetica,sans-serif;color:#151622}
 .page{width:210mm;height:297mm;position:relative;overflow:hidden;background:#fff}
-.top{height:55%;padding:14mm 15mm 8mm}
+.top{height:52%;padding:12mm 15mm 7mm}
 .kicker{font-size:10.5pt;font-weight:800;letter-spacing:.04em;color:#0D1C55;margin-bottom:9mm}
 h1{font-size:33pt;line-height:1.02;letter-spacing:-.025em;text-transform:uppercase;color:#0D1C55;margin:0;max-width:150mm}
 h2{font-size:17pt;line-height:1.15;font-weight:400;margin:4mm 0 0}
@@ -79,13 +79,13 @@ h2{font-size:17pt;line-height:1.15;font-weight:400;margin:4mm 0 0}
 .qr{text-align:center}
 .qr img{width:45mm;height:45mm;padding:2mm;border:1.1mm solid #0D1C55;border-radius:4mm;background:#fff}
 .scan{margin-top:2mm;font-family:"Segoe Print","Bradley Hand",cursive;font-style:italic;font-size:14pt;transform:rotate(-4deg);color:#0D1C55}
-.lower{height:36%;display:grid;grid-template-columns:60% 40%}
+.lower{height:39%;display:grid;grid-template-columns:58% 42%}
 .photo{width:100%;height:100%;object-fit:cover;display:block;background:#e9ebef}
 .photo.missing{display:grid;place-items:center;color:#0D1C55;font-size:28pt;font-weight:800}
-.descpanel{background:#0D1C55;color:#fff;padding:10mm 9mm 8mm}
-.badge{width:34mm;height:34mm;border-radius:50%;display:grid;place-items:center;text-align:center;background:#B6DEDF;color:#0D1C55;font-size:9.5pt;font-weight:800;line-height:1.2;margin-bottom:8mm}
-.descpanel h3{font-size:12pt;letter-spacing:.03em;margin:0 0 5mm}
-.desc{font-size:10.5pt;line-height:1.47}
+.descpanel{background:#0D1C55;color:#fff;padding:8mm 8mm 7mm;display:flex;flex-direction:column;min-height:0}
+.badge{width:30mm;height:30mm;border-radius:50%;display:grid;place-items:center;text-align:center;background:#B6DEDF;color:#0D1C55;font-size:8.8pt;font-weight:800;line-height:1.15;margin-bottom:5mm}
+.descpanel h3{font-size:11pt;letter-spacing:.03em;margin:0 0 4mm;flex:0 0 auto}
+.desc{font-size:10.5pt;line-height:1.34;overflow:hidden;flex:1 1 auto;min-height:0}
 .footer{position:absolute;left:0;right:0;bottom:0;height:9%;background:#07102f;display:flex;align-items:center;padding:5mm 15mm}
 .footer img{height:16mm;width:auto;display:block}
 @page{size:A4 portrait;margin:0}
@@ -95,7 +95,6 @@ h2{font-size:17pt;line-height:1.15;font-weight:400;margin:4mm 0 0}
 <body>
 <div class="page">
   <section class="top">
-    <div class="kicker">COURS PRÈS DE CHEZ VOUS</div>
     <h1>${title}</h1>
     <h2>${subtitle}</h2>
     <div class="info">
@@ -112,18 +111,51 @@ h2{font-size:17pt;line-height:1.15;font-weight:400;margin:4mm 0 0}
   <section class="lower">
     ${photo}
     <div class="descpanel">
-      <div class="badge">PLACES<br>DISPONIBLES</div>
       <h3>DESCRIPTION</h3>
-      <div class="desc">${desc}</div>
+      <div id="printDesc" class="desc">${desc}</div>
     </div>
   </section>
   <footer class="footer"><img src="${logoUrl}" alt="UniPop"></footer>
 </div>
 <script>
 (function(){
+  function fitDescription(){
+    const box=document.getElementById('printDesc');
+    if(!box)return;
+
+    const original=box.textContent.trim();
+    const fallback=${JSON.stringify(current.displayText||'')};
+
+    function fits(){
+      return box.scrollHeight<=box.clientHeight+1 && box.scrollWidth<=box.clientWidth+1;
+    }
+
+    function applyAndFit(text,startPt,minPt){
+      box.textContent=text||'';
+      let size=startPt;
+      box.style.fontSize=size+'pt';
+      box.style.lineHeight='1.34';
+
+      while(!fits() && size>minPt){
+        size-=0.2;
+        box.style.fontSize=size+'pt';
+      }
+      return fits();
+    }
+
+    // Prefer the complete original text.
+    if(!applyAndFit(original,10.5,6.2)){
+      // If it would become uncomfortably tiny, use the display advertising text.
+      applyAndFit(fallback||original,10.5,6.2);
+    }
+  }
+
   const imgs=[...document.images];
   Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(r=>{img.onload=img.onerror=r})))
-    .then(()=>setTimeout(()=>{window.focus();window.print()},300));
+    .then(()=>{
+      fitDescription();
+      setTimeout(()=>{window.focus();window.print()},300);
+    });
 })();
 <\/script>
 </body>

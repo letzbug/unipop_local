@@ -259,3 +259,37 @@ textarea.auto-textarea{
   .flyer-ref{width:210mm!important;height:297mm!important;min-height:297mm!important;margin:0!important;box-shadow:none!important}
   @page{size:A4 portrait;margin:0}
 }
+
+/* v26 flyer text safety */
+.flyer-description-panel .flyer-desc{
+  max-height:74mm;
+  overflow:hidden;
+  line-height:1.38;
+}
+
+/* v27 – Flyer: more room for text, no badge/kicker */
+.flyer-ref .flyer-upper{
+  height:52% !important;
+  padding-top:12mm !important;
+}
+.flyer-ref .flyer-lower{
+  height:39% !important;
+  grid-template-columns:58% 42% !important;
+}
+.flyer-description-panel{
+  padding:8mm 8mm 7mm !important;
+  display:flex !important;
+  flex-direction:column !important;
+  min-height:0 !important;
+}
+.flyer-description-panel h3{
+  margin:0 0 4mm !important;
+  flex:0 0 auto;
+}
+.flyer-description-panel .flyer-desc{
+  flex:1 1 auto;
+  min-height:0;
+  max-height:none !important;
+  overflow:hidden !important;
+  line-height:1.34 !important;
+}
