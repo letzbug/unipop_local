@@ -14,6 +14,33 @@
  }
  function resizeTexts(){autoResize($('originalText'));autoResize($('displayText'))}
 
+ function compressImage(file,maxW=1600,maxH=900,quality=.84){
+   return new Promise((resolve,reject)=>{
+     const reader=new FileReader();
+     reader.onerror=()=>reject(reader.error||new Error('Datei konnte nicht gelesen werden'));
+     reader.onload=()=>{
+       const img=new Image();
+       img.onerror=()=>reject(new Error('Bild konnte nicht geladen werden'));
+       img.onload=()=>{
+         let w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+         const scale=Math.min(1,maxW/w,maxH/h);
+         w=Math.max(1,Math.round(w*scale)); h=Math.max(1,Math.round(h*scale));
+         const canvas=document.createElement('canvas');
+         canvas.width=w; canvas.height=h;
+         const ctx=canvas.getContext('2d');
+         ctx.drawImage(img,0,0,w,h);
+         // PNG mit Transparenz bleibt PNG, sonst platzsparendes JPEG.
+         const isPng=/png$/i.test(file.type)||/\.png$/i.test(file.name);
+         const type=isPng?'image/png':'image/jpeg';
+         try{ resolve(canvas.toDataURL(type,isPng?undefined:quality)); }
+         catch(e){ reject(e); }
+       };
+       img.src=reader.result;
+     };
+     reader.readAsDataURL(file);
+   });
+ }
+
  try{
    courses=await UniData.loadCourses();
    const today=new Date(); today.setHours(0,0,0,0);
@@ -155,30 +182,46 @@
  ['originalText','displayText'].forEach(id=>$(id).addEventListener('input',()=>{autoResize($(id));updateEditingPreview()}));
  ['title','code','date','time','place','trainer'].forEach(id=>$(id).addEventListener('input',updateEditingPreview));
 
- $('imageInput').onchange=e=>{
+ $('imageInput').onclick=()=>{
+   // Schon vor der Auswahl leeren: dadurch feuert "change" auch,
+   // wenn danach dieselbe Datei oder eine andere Datei gewählt wird.
+   $('imageInput').value='';
+ };
+
+ $('imageInput').onchange=async e=>{
    const f=e.target.files?.[0];
    if(!f||!selected)return;
 
-   // Kurs-ID beim Start des Uploads festhalten.
    const courseId=selected.id;
-   const r=new FileReader();
+   const prev=$('imgPrev').src;
 
-   r.onload=()=>{
-     UniStore.setImage(courseId,r.result);
+   try{
+     $('imgPrev').style.opacity='.45';
+     const dataUrl=await compressImage(f);
 
-     // Vorschau nur aktualisieren, wenn noch derselbe Kurs ausgewählt ist.
-     if(selected && selected.id===courseId){
-       $('imgPrev').src=r.result;
-       updateEditingPreview();
+     // Testweise speichern; bei vollem localStorage klare Fehlermeldung.
+     try{
+       UniStore.setImage(courseId,dataUrl);
+     }catch(storageErr){
+       throw new Error('Browser-Speicher für Bilder ist voll. Bitte ein altes Bild entfernen.');
      }
 
-     // Input wieder leeren, damit auch dieselbe Datei später erneut gewählt werden kann.
+     if(selected && selected.id===courseId){
+       $('imgPrev').src=dataUrl;
+       $('imgPrev').style.opacity='1';
+       updateEditingPreview();
+     }
+   }catch(err){
+     console.error(err);
+     $('imgPrev').style.opacity='1';
+     if(prev)$('imgPrev').src=prev;
+     alert('Bild konnte nicht übernommen werden: '+(err.message||err));
+   }finally{
+     // Nach jedem Versuch wieder zurücksetzen.
      $('imageInput').value='';
-   };
-
-   r.readAsDataURL(f);
+   }
  };
- $('removeImage').onclick=()=>{if(!selected)return;UniStore.setImage(selected.id,'');$('imgPrev').src='assets/images/placeholder.svg';$('imageInput').value='';updateEditingPreview()};
+ $('removeImage').onclick=()=>{if(!selected)return;UniStore.setImage(selected.id,'');$('imgPrev').src='assets/images/placeholder.svg';$('imgPrev').style.opacity='1';$('imageInput').value='';updateEditingPreview()};
 
  $('addToPlaylist').onclick=()=>{
    if(!selected)return;
