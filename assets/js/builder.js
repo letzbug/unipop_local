@@ -4,6 +4,9 @@
  let courses=[],selected=null,playlist=[];
 
  let displays=UniStore.getDisplays();
+ // Alte doppelte Standortkarten aus früheren lokalen Versionen entfernen.
+ displays=[...new Map(displays.map(d=>[d.id,d])).values()];
+ UniStore.saveDisplays(displays);
  const standardDisplays=cfg.screens||[];
  let displayListChanged=false;
  standardDisplays.forEach(sd=>{
@@ -477,6 +480,17 @@
      const remoteUrl=await UniHybrid.saveCourseImage(courseId,dataUrl);
      if(selected && selected.id===courseId && remoteUrl){
        selected._remoteImageUrl=remoteUrl;
+
+       // Falls der Kurs bereits in der Playlist liegt, die neue Remote-Bild-URL
+       // SOFORT dort eintragen. Vorher blieb die Playlist auf imageUrl:'' und
+       // das entfernte Display konnte das neu gewählte Bild nicht sehen.
+       const pi=playlist.findIndex(x=>x.course?.id===courseId);
+       if(pi>=0){
+         playlist[pi].image='';
+         playlist[pi].imageUrl=remoteUrl;
+         renderPlaylist();
+         await refreshCampaignPreview();
+       }
      }
 
      if(selected && selected.id===courseId){
@@ -527,6 +541,15 @@
    if(!playlist.length){alert('Bitte zuerst mindestens einen Kurs zur Playlist hinzufügen.');return}
    try{
      const target=$('screenSelect').value||activeDisplayId;
+
+     // Vor dem Veröffentlichen sicherstellen, dass jeder Kurs seine zentrale
+     // Bild-URL mit in Supabase bekommt.
+     playlist=playlist.map(it=>({
+       ...it,
+       image:'',
+       imageUrl:it.imageUrl||it.course?._remoteImageUrl||UniHybrid.getRemoteImageUrl(it.course?.id)||''
+     }));
+
      const payload=campaignPayload();
      await UniHybrid.setAssignment(target,payload);
 

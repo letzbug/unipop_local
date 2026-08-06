@@ -17,7 +17,14 @@ window.UniHybrid = (function(){
           new Promise((_,rej)=>setTimeout(()=>rej(new Error('Supabase display timeout')),5000))
         ]);
         if(Array.isArray(rows) && rows.length){
-          const mapped=rows.map(r=>({id:r.slug,name:r.name,location:r.location||r.name,enabled:r.enabled!==false}));
+          const seen=new Set();
+          const mapped=rows
+            .map(r=>({id:r.slug,name:r.name,location:r.location||r.name,enabled:r.enabled!==false}))
+            .filter(d=>{
+              if(!d.id || seen.has(d.id)) return false;
+              seen.add(d.id);
+              return true;
+            });
           UniStore.saveDisplays(mapped);
           return mapped;
         }

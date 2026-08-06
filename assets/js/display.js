@@ -13,7 +13,7 @@
  async function show(i){
    const it=assignment.items[i%assignment.items.length],c=it.course;current=it;currentQr=qr(c.url);
    $('dTitle').textContent=c.title||'Cours UniPop';$('dSubtitle').textContent=c.subtitle||c.subject||'';$('dDesc').textContent=it.displayText||UniData.shorten(c.description,245);$('dDate').textContent=c.date||'';$('dTime').textContent=c.time||'';$('dPlace').textContent=c.place||'';$('dTrainer').textContent=c.trainer||'UniPop';$('dCode').textContent='Code : '+(c.code||'—');
-   let image=it.imageUrl||it.image||'';
+   let image=it.imageUrl||it.image||UniHybrid.getRemoteImageUrl(c.id)||'';
    if(!image){
      image=await UniImageStore.get(c.id)||'';
    } if(image){$('heroImg').src=image;$('heroImg').style.display='block';$('noImage').style.display='none'}else{$('heroImg').style.display='none';$('noImage').style.display='block'}

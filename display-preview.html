@@ -39,7 +39,7 @@
     $('dTrainer').textContent=c.trainer||'UniPop';
     $('dCode').textContent='Code : '+(c.code||'—');
 
-    let im=it.imageUrl||it.image||'';
+    let im=it.imageUrl||it.image||UniHybrid.getRemoteImageUrl(c.id)||'';
     if(!im){
       try{im=await UniImageStore.get(c.id)||''}
       catch(e){console.error(e)}
