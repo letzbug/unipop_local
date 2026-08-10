@@ -81,6 +81,7 @@
    $('time').value=it.course.time||'';
    $('place').value=it.course.place||'';
    $('trainer').value=it.course.trainer||'';
+   $('courseUrl').value=it.course.courseUrl||it.course.url||'';
    $('originalText').value=it.course.description||'';
    $('displayText').value=it.displayText||UniData.shorten(it.course.description||'',245);
    selected._remoteImageUrl=it.imageUrl||UniHybrid.getRemoteImageUrl(it.course.id)||'';
@@ -280,7 +281,8 @@
    $('date').value=selected.date;
    $('time').value=selected.time;
    $('place').value=selected.place;
-   $('trainer').value=selected.trainer;
+   $('trainer').value=selected.trainer||'';
+   $('courseUrl').value=selected.courseUrl||selected.url||'';
    $('originalText').value=selected.description;
    $('displayText').value=UniData.shorten(selected.description,245);
    selected._remoteImageUrl=selected._remoteImageUrl||UniHybrid.getRemoteImageUrl(selected.id)||'';
@@ -300,6 +302,8 @@
        time:$('time').value.trim(),
        place:$('place').value.trim(),
        trainer:$('trainer').value.trim(),
+       courseUrl:$('courseUrl').value.trim()||UNIPOP_CONFIG.qrFallback,
+       url:$('courseUrl').value.trim()||UNIPOP_CONFIG.qrFallback,
        description:$('originalText').value.trim()
      },
      image:'',
@@ -393,7 +397,8 @@
      time:c.time||'',
      place:c.place||'',
      trainer:c.trainer||'',
-     url:c.url||UNIPOP_CONFIG.qrFallback,
+     courseUrl:c.courseUrl||c.url||UNIPOP_CONFIG.qrFallback,
+     url:c.courseUrl||c.url||UNIPOP_CONFIG.qrFallback,
      places:c.places??null,
      registered:c.registered??null,
      level:c.level||'',
@@ -493,7 +498,7 @@
    updateEditingPreview();
  };
  ['originalText','displayText'].forEach(id=>$(id).addEventListener('input',()=>{autoResize($(id));updateEditingPreview()}));
- ['title','code','date','time','place','trainer'].forEach(id=>$(id).addEventListener('input',updateEditingPreview));
+ ['title','code','date','time','place','trainer','courseUrl'].forEach(id=>$(id).addEventListener('input',updateEditingPreview));
 
  $('imageInput').onclick=()=>{
    // Schon vor der Auswahl leeren: dadurch feuert "change" auch,

@@ -28,7 +28,7 @@
   async function show(){
     const it=items[i],c=it.course;
     current=it;
-    currentQr=qr(c.url);
+    currentQr=qr(c.courseUrl||c.url||UNIPOP_CONFIG.qrFallback);
 
     $('dTitle').textContent=c.title||'';
     $('dSubtitle').textContent=c.subtitle||c.subject||'';

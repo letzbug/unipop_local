@@ -19,5 +19,5 @@ window.UNIPOP_CONFIG = {
   slideSeconds: 14,
   printCooldownSeconds: 15,
   maxPrintsPerHour: 20,
-  qrFallback: 'https://www.unipop.lu/'
+  qrFallback:'https://www.unipop.lu'
 };
