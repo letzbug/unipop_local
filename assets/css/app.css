@@ -353,25 +353,42 @@ textarea.auto-textarea{
 .ai-label-toggle{display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:600;font-size:14px}
 .ai-label-toggle input{width:18px;height:18px}
 
-/* v46 – keep AI-generated label above the course image */
-.hero-media,
-.hero-image,
-.image-wrap,
-.visual,
-#heroMedia{
-  position:relative !important;
-}
 
+/* v47 – precise stacking fix */
 .hero-img,
 #heroImg{
-  position:relative !important;
-  z-index:1 !important;
+  position:absolute !important;
+  z-index:0 !important;
 }
 
+/* Keep the actual course content above the hero image */
+.display-content,
+.content,
+.course-content,
+.display-copy,
+.text-panel,
+.details,
+.meta,
+.qr-area,
+#qrArea,
+.printbar,
+#dTitle,
+#dSubtitle,
+#dDesc,
+#dDate,
+#dTime,
+#dPlace,
+#dTrainer,
+#dCode{
+  position:relative;
+  z-index:2;
+}
+
+/* AI label alone stays on top of everything */
 .ai-generated-badge{
   position:absolute !important;
   top:14px !important;
   left:14px !important;
-  z-index:999 !important;
+  z-index:50 !important;
   pointer-events:none !important;
 }
