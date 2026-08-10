@@ -11,7 +11,8 @@
  if(!assignment?.items?.length){try{const c=(await UniData.loadCourses())[0];assignment={name:'Auto',items:[{course:c,image:await UniImageStore.get(c.id)||'',displayText:UniData.shorten(c.description,245)}],duration:UNIPOP_CONFIG.slideSeconds,showQR:true,showPrint:true}}catch(e){return}}
  function qr(url){return 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=10&data='+encodeURIComponent(url||UNIPOP_CONFIG.qrFallback)}
  async function show(i){
-   const it=assignment.items[i%assignment.items.length],c=it.course;current=it;currentQr=qr(c.courseUrl||c.url||UNIPOP_CONFIG.qrFallback);
+   const it=assignment.items[i%assignment.items.length],c=it.course;current=it;
+   const aiBadge=$('aiGeneratedBadge'); if(aiBadge) aiBadge.style.display=(it.aiGenerated||c.aiGenerated)?'block':'none';currentQr=qr(c.courseUrl||c.url||UNIPOP_CONFIG.qrFallback);
    $('dTitle').textContent=c.title||'Cours UniPop';$('dSubtitle').textContent=c.subtitle||c.subject||'';$('dDesc').textContent=it.displayText||UniData.shorten(c.description,245);$('dDate').textContent=c.date||'';$('dTime').textContent=c.time||'';$('dPlace').textContent=c.place||'';$('dTrainer').textContent=c.trainer||'UniPop';$('dCode').textContent='Code : '+(c.code||'—');
    let image=it.imageUrl||it.image||UniHybrid.getRemoteImageUrl(c.id)||'';
    if(!image){

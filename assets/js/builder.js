@@ -82,6 +82,7 @@
    $('place').value=it.course.place||'';
    $('trainer').value=it.course.trainer||'';
    $('courseUrl').value=it.course.courseUrl||it.course.url||'';
+   $('aiGenerated').checked=!!(it.aiGenerated||it.course.aiGenerated);
    $('originalText').value=it.course.description||'';
    $('displayText').value=it.displayText||UniData.shorten(it.course.description||'',245);
    selected._remoteImageUrl=it.imageUrl||UniHybrid.getRemoteImageUrl(it.course.id)||'';
@@ -283,6 +284,7 @@
    $('place').value=selected.place;
    $('trainer').value=selected.trainer||'';
    $('courseUrl').value=selected.courseUrl||selected.url||'';
+   $('aiGenerated').checked=!!selected.aiGenerated;
    $('originalText').value=selected.description;
    $('displayText').value=UniData.shorten(selected.description,245);
    selected._remoteImageUrl=selected._remoteImageUrl||UniHybrid.getRemoteImageUrl(selected.id)||'';
@@ -302,12 +304,14 @@
        time:$('time').value.trim(),
        place:$('place').value.trim(),
        trainer:$('trainer').value.trim(),
+       aiGenerated:$('aiGenerated').checked,
        courseUrl:$('courseUrl').value.trim()||UNIPOP_CONFIG.qrFallback,
        url:$('courseUrl').value.trim()||UNIPOP_CONFIG.qrFallback,
        description:$('originalText').value.trim()
      },
      image:'',
      imageUrl:selected?._remoteImageUrl||UniHybrid.getRemoteImageUrl(selected?.id)||'',
+     aiGenerated:$('aiGenerated').checked,
      displayText:$('displayText').value.trim()
    };
  }
@@ -397,6 +401,7 @@
      time:c.time||'',
      place:c.place||'',
      trainer:c.trainer||'',
+     aiGenerated:!!c.aiGenerated,
      courseUrl:c.courseUrl||c.url||UNIPOP_CONFIG.qrFallback,
      url:c.courseUrl||c.url||UNIPOP_CONFIG.qrFallback,
      places:c.places??null,
@@ -412,6 +417,7 @@
      course:compactCourse(it.course),
      image:'',
      imageUrl:it.imageUrl||UniHybrid.getRemoteImageUrl(it.course?.id)||'',
+     aiGenerated:!!(it.aiGenerated||it.course?.aiGenerated),
      displayText:it.displayText||''
    }));
    return {
@@ -499,6 +505,7 @@
  };
  ['originalText','displayText'].forEach(id=>$(id).addEventListener('input',()=>{autoResize($(id));updateEditingPreview()}));
  ['title','code','date','time','place','trainer','courseUrl'].forEach(id=>$(id).addEventListener('input',updateEditingPreview));
+ $('aiGenerated').addEventListener('change',updateEditingPreview);
 
  $('imageInput').onclick=()=>{
    // Schon vor der Auswahl leeren: dadurch feuert "change" auch,

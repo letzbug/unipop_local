@@ -341,3 +341,14 @@ textarea.auto-textarea{
 .hero-img[src=""]{
   display:none !important;
 }
+
+.ai-generated-badge{
+ position:absolute;top:14px;left:14px;z-index:30;
+ padding:6px 10px;border-radius:7px;
+ background:rgba(25,25,28,.72);color:#fff;
+ font:600 clamp(12px,1.0vw,17px)/1.15 Arial,Helvetica,sans-serif;
+ letter-spacing:.01em;box-shadow:0 1px 4px rgba(0,0,0,.18);
+ pointer-events:none;
+}
+.ai-label-toggle{display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:600;font-size:14px}
+.ai-label-toggle input{width:18px;height:18px}
