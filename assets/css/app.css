@@ -425,3 +425,27 @@ textarea.auto-textarea{
 .ai-generated-badge{
   z-index:40 !important;
 }
+
+/* v50 printed flyer */
+@media print {
+  .flyer-ref .flyer-lower { transform: translateY(-5mm) !important; }
+  .flyer-footer-ref { bottom: 5mm !important; }
+  .bottom-blue-strip {
+    position:absolute; left:0; right:0; bottom:0; height:5mm;
+    background:#07102f !important;
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+}
+
+/* v51 – visually balanced footer top/bottom blue space */
+.flyer-footer-ref{
+  padding-top:3mm !important;
+  padding-bottom:3mm !important;
+  align-items:center !important;
+}
+.flyer-footer-logo,
+.flyer-footer-contact,
+.flyer-footer-address{
+  align-self:center !important;
+}

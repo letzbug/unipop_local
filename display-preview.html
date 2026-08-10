@@ -104,8 +104,13 @@
         const place=esc(c.place||'');
         const trainer=esc(c.trainer||'UniPop');
         const code=esc(c.code||'—');
-        const qrCode=esc(currentQr||'');
-        const photo=image ? `<img class="photo" src="${image}" alt="">` : `<div class="photo missing">UniPop</div>`;
+        const printLink=c.courseUrl||c.url||UNIPOP_CONFIG.qrFallback;
+        const qrCode=esc(qr(printLink));
+        const aiPrintLabel=(current.aiGenerated||c.aiGenerated)
+       ? `<div class="print-ai-label">AI-generated</div>` : '';
+     const photo=image
+       ? `<div class="photo-wrap"><img class="photo" src="${image}" alt="">${aiPrintLabel}</div>`
+       : `<div class="photo missing">UniPop</div>`;
 
         const doc=`<!doctype html>
 <html lang="fr">
@@ -128,19 +133,20 @@ h2{font-size:17pt;line-height:1.15;font-weight:400;margin:4mm 0 0}
 .qr{text-align:center}
 .qr img{width:45mm;height:45mm;padding:2mm;border:1.1mm solid #0D1C55;border-radius:4mm;background:#fff}
 .scan{margin-top:2mm;font-family:"Segoe Print","Bradley Hand",cursive;font-style:italic;font-size:14pt;transform:rotate(-4deg);color:#0D1C55}
-.lower{height:39%;display:grid;grid-template-columns:58% 42%}
+.lower{height:39%;display:grid;grid-template-columns:58% 42%;transform:translateY(-5mm)}
 .photo{width:100%;height:100%;object-fit:cover;display:block;background:#e9ebef}
 .photo.missing{display:grid;place-items:center;color:#0D1C55;font-size:28pt;font-weight:800}
 .descpanel{background:#0D1C55;color:#fff;padding:8mm 8mm 7mm;display:flex;flex-direction:column;min-height:0}
 .badge{width:30mm;height:30mm;border-radius:50%;display:grid;place-items:center;text-align:center;background:#B6DEDF;color:#0D1C55;font-size:8.8pt;font-weight:800;line-height:1.15;margin-bottom:5mm}
 .descpanel h3{font-size:11pt;letter-spacing:.03em;margin:0 0 4mm;flex:0 0 auto}
 .desc{font-size:10.5pt;line-height:1.34;overflow:hidden;flex:1 1 auto;min-height:0}
-.footer{position:absolute;left:0;right:0;bottom:0;height:9%;background:#07102f;color:#fff;display:grid;grid-template-columns:34mm 1fr 48mm;align-items:center;gap:7mm;padding:4mm 10mm}
+.footer{position:absolute;left:0;right:0;bottom:5mm;height:9%;background:#07102f;color:#fff;display:grid;grid-template-columns:34mm 1fr 48mm;align-items:center;gap:7mm;padding:3mm 10mm}
 .footer-logo{height:100%;display:flex;align-items:center;justify-content:center;border-right:.3mm solid rgba(255,255,255,.75);padding-right:7mm}
 .footer-logo img{max-height:16mm;max-width:28mm;width:auto;display:block}
 .footer-contact,.footer-address{font-size:7.5pt;line-height:1.45;display:flex;flex-direction:column;gap:.7mm}
 .footer-contact strong{font-size:8pt;margin-bottom:.5mm}
 .footer-address{border-left:.3mm solid rgba(255,255,255,.75);padding-left:7mm}
+.bottom-blue-strip{position:absolute;left:0;right:0;bottom:0;height:5mm;background:#07102f;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 @page{size:A4 portrait;margin:0}
 @media print{
 html,body,.page{width:210mm;height:297mm}
@@ -187,6 +193,7 @@ html,body,.page{width:210mm;height:297mm}
       <span>L-4360 Esch-sur-Alzette</span>
     </div>
   </footer>
+  <div class="bottom-blue-strip"></div>
 </div>
 <script>
 (function(){
