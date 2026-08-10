@@ -37,7 +37,9 @@
      hero.style.display='none';
      $('noImage').style.display='block';
    }
-   $('qrImg').src=currentQr;$('qrArea').style.display=assignment.showQR===false?'none':'block';$('printBar').style.display=assignment.showPrint===false?'none':'flex';
+   $('qrImg').src=currentQr;
+   $('qrArea').style.display=assignment.showQR===false?'none':'block';
+   $('printBar').style.display=assignment.showPrint===false?'none':'flex';
    requestAnimationFrame(()=>window.UniDisplayFit&&window.UniDisplayFit());
    UniHybrid.heartbeat(screenId,{courseCode:c.code,title:c.title,campaign:assignment.name||'',slide:i%assignment.items.length});
  }

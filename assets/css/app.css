@@ -392,3 +392,36 @@ textarea.auto-textarea{
   z-index:50 !important;
   pointer-events:none !important;
 }
+
+/* v48 – QR + print bar always visible on image slides */
+#qrArea,
+.qr-area{
+  position:absolute !important;
+  right:4.2% !important;
+  bottom:16.5% !important;
+  z-index:20 !important;
+}
+
+#printBar,
+.printbar{
+  position:absolute !important;
+  left:0 !important;
+  right:0 !important;
+  bottom:0 !important;
+  z-index:25 !important;
+}
+
+/* Keep course text/meta above image as well */
+.display-content,
+.course-content,
+.text-panel,
+.details,
+.meta{
+  position:relative !important;
+  z-index:10 !important;
+}
+
+/* AI label remains topmost */
+.ai-generated-badge{
+  z-index:40 !important;
+}
