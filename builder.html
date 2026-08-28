@@ -1,6 +1,27 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UniPop Display Builder</title><link rel="stylesheet" href="assets/css/app.css"></head><body>
-<div class="builder"><aside class="sidebar"><div class="brand">UniPop<small>Display Builder</small></div><nav class="side-nav"><a class="active" href="#builder">▣ Builder</a><a href="#stats">▥ Statistiken</a><a href="display.html" target="_blank">▢ Display</a></nav></aside>
-<main class="main"><header class="topbar"><div><h1>Display Building App</h1><p>UniPop-Kurse aus trainings.json auswählen, Playlist bauen und Screen zuweisen.</p></div><div class="actions"><button id="fullPreview" class="btn">Vorschau Vollbild</button><button id="publish" class="btn primary">Playlist veröffentlichen</button></div></header>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UniPop Display Builder</title><link rel="stylesheet" href="assets/css/app.css"><style>
+.auth-lock{min-height:100vh;display:grid;place-items:center;padding:28px;background:radial-gradient(circle at 80% 0,#dfeff4 0,transparent 32%),linear-gradient(145deg,#f8fbff,#edf2f7);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#16213c}
+.auth-card{width:min(470px,100%);background:#fff;border:1px solid #dfe5ee;border-radius:22px;padding:30px;box-shadow:0 24px 70px rgba(13,28,85,.16)}
+.auth-brand{display:flex;align-items:center;gap:14px;margin-bottom:22px}.auth-brand img{width:92px;height:auto}.auth-brand b{display:block;color:#0D1C55;font-size:22px}.auth-brand small{display:block;color:#718097;margin-top:3px;text-transform:uppercase;letter-spacing:.08em;font-size:10px}
+.auth-badge{display:inline-flex;align-items:center;gap:7px;background:#edf3ff;color:#1c4fb8;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:800;margin-bottom:12px}.auth-card h1{margin:0 0 8px;color:#0D1C55;font-size:28px}.auth-card p{margin:0 0 20px;color:#68758b;line-height:1.5;font-size:13px}.auth-field{display:grid;gap:6px;margin:12px 0}.auth-field label{font-size:11px;font-weight:800;color:#4f5d74;text-transform:uppercase;letter-spacing:.05em}.auth-field input{width:100%;border:1px solid #d7deea;border-radius:10px;padding:12px 13px;background:#fff;outline:none}.auth-field input:focus{border-color:#1c56c3;box-shadow:0 0 0 3px rgba(28,86,195,.10)}.auth-btn{width:100%;border:0;border-radius:10px;padding:12px 16px;background:linear-gradient(90deg,#0D1C55,#1f56ba);color:#fff;font-weight:800;cursor:pointer;margin-top:8px}.auth-btn:disabled{opacity:.6;cursor:wait}.auth-msg{display:none;margin-top:12px;padding:10px 12px;border-radius:9px;font-size:12px}.auth-msg.show{display:block}.auth-msg.err{background:#fff0f1;color:#a5222d}.auth-msg.ok{background:#eaf7f0;color:#17643e}.auth-foot{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-top:18px;padding-top:16px;border-top:1px solid #edf0f5;color:#7a8698;font-size:10px}.auth-foot a{color:#1c4fb8;text-decoration:none;font-weight:700}
+.builder-auth-user{display:flex;align-items:center;gap:8px;font-size:12px;color:#667085}.builder-auth-user b{color:#0D1C55}.builder-auth-logout{border:1px solid #dde2ea;background:#fff;border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12px}
+</style></head><body>
+<section id="builderAuth" class="auth-lock">
+  <div class="auth-card">
+    <div class="auth-brand"><img src="assets/images/unipop-logo.png" alt="UniPop"><div><b>UniPop Local</b><small>Display Builder</small></div></div>
+    <span class="auth-badge">🔒 Administrativer Bereich</span>
+    <h1>Display Builder geschützt</h1>
+    <p>Bitte mit dem UniPop-Administrator-Konto anmelden. Externe Inject-Zugänge haben keinen Zugriff auf den Display Builder.</p>
+    <form id="builderLoginForm">
+      <div class="auth-field"><label for="builderEmail">E-Mail</label><input id="builderEmail" type="email" autocomplete="email" required></div>
+      <div class="auth-field"><label for="builderPassword">Passwort</label><input id="builderPassword" type="password" autocomplete="current-password" required></div>
+      <button id="builderLoginBtn" class="auth-btn" type="submit">Display Builder öffnen</button>
+      <div id="builderAuthMsg" class="auth-msg"></div>
+    </form>
+    <div class="auth-foot"><span>Built by Frank G · IBM Certified AI Developer</span><a href="index.html">← UniPop Local</a></div>
+  </div>
+</section>
+<div id="builderApp" class="builder hidden"><aside class="sidebar"><div class="brand">UniPop<small>Display Builder</small></div><nav class="side-nav"><a class="active" href="#builder">▣ Builder</a><a href="#stats">▥ Statistiken</a><a href="display.html" target="_blank">▢ Display</a></nav></aside>
+<main class="main"><header class="topbar"><div><h1>Display Building App</h1><p>UniPop-Kurse aus trainings.json auswählen, Playlist bauen und Screen zuweisen.</p></div><div class="actions"><div class="builder-auth-user"><span>Admin:</span> <b id="builderAdminIdentity">—</b><button id="builderLogout" class="builder-auth-logout" type="button">Abmelden</button></div><button id="fullPreview" class="btn">Vorschau Vollbild</button><button id="publish" class="btn primary">Playlist veröffentlichen</button></div></header>
 
 <section class="panel display-manager-panel">
   <div class="display-manager-head">
@@ -23,7 +44,7 @@
 <div class="panel"><h2>3. Playlist & Screen</h2><div class="field"><label>Name der Kampagne</label><input id="campaignName" value="UniPop Auswahl"></div><div class="field"><label>Aktiver Standort / Ziel-Screen</label><select id="screenSelect"></select></div><div class="field"><label>Anzeigedauer pro Kurs</label><select id="duration"><option value="10">10 Sekunden</option><option value="14" selected>14 Sekunden</option><option value="20">20 Sekunden</option><option value="30">30 Sekunden</option></select></div><div class="option-row"><span>QR-Code anzeigen</span><input id="showQR" type="checkbox" checked></div><div class="option-row"><span>Druckfunktion anzeigen</span><input id="showPrint" type="checkbox" checked></div><h3>Playlist</h3><div id="playlist" class="course-list"></div><div class="preview-wrap" style="margin-top:14px"><iframe id="preview" class="preview-frame" src="display-preview.html"></iframe></div></div>
 </section>
 <section id="stats"><div class="stats-row"><div class="stat"><span>Heute</span><b id="stToday">0</b></div><div class="stat"><span>Woche</span><b id="stWeek">0</b></div><div class="stat"><span>Jahr</span><b id="stYear">0</b></div><div class="stat"><span>Gesamt</span><b id="stTotal">0</b></div></div><div class="panel table-panel"><h2>Display-Status</h2><table class="table"><thead><tr><th>Display</th><th>Status</th><th>Letzter Kontakt</th></tr></thead><tbody id="screenTable"></tbody></table></div><div class="panel table-panel"><h2>Top-Kurse nach Drucken</h2><table class="table"><thead><tr><th>Kurs</th><th>Code</th><th>Drucke</th></tr></thead><tbody id="topTable"></tbody></table></div></section>
-</main></div><script src="assets/js/config.js"></script><script src="assets/js/supabase-config.js"></script><script src="assets/js/store.js"></script><script src="assets/js/supabase.js"></script><script src="assets/js/hybrid-store.js"></script><script src="assets/js/image-store.js"></script><script src="assets/js/data.js"></script><script src="assets/js/builder.js"></script>
+</main></div>
 <div id="displayModal" class="modal-backdrop hidden">
  <div class="modal-card"><h2>Neuer Standort</h2>
  <div class="field"><label>Name des Standorts</label><input id="newDisplayName" placeholder="z. B. Commune Niederanven"></div>
@@ -39,4 +60,5 @@
  </div>
 </div>
 
+<script src="assets/js/supabase-config.js"></script><script src="assets/js/inject-api.js"></script><script src="assets/js/builder-auth.js"></script>
 </body></html>
