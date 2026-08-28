@@ -1,0 +1,475 @@
+:root{--navy:#07102f;--purple:#76258a;--magenta:#d42d92;--peach:#f5a17f;--bg:#f5f6f8;--ink:#141522;--muted:#707483;--line:#e4e6ec;--white:#fff;--shadow:0 14px 40px rgba(15,20,45,.09);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink)}button,input,textarea,select{font:inherit}a{color:inherit}.hidden{display:none!important}.builder{min-height:100vh;display:grid;grid-template-columns:220px 1fr}.sidebar{position:sticky;top:0;height:100vh;background:linear-gradient(180deg,#06102c,#09163a);color:#fff;padding:24px 16px;display:flex;flex-direction:column}.brand{font-size:30px;font-weight:850;letter-spacing:-.06em}.brand small{display:block;font-size:11px;font-weight:400;letter-spacing:0;margin-top:5px;opacity:.8}.side-nav{margin-top:28px;display:grid;gap:7px}.side-nav a{padding:11px 12px;border-radius:8px;text-decoration:none;font-size:14px}.side-nav a.active,.side-nav a:hover{background:#74258a}.side-foot{margin-top:auto;font-size:12px;opacity:.7}.main{padding:24px 28px 50px;min-width:0}.topbar{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:18px}.topbar h1{margin:0;font-size:30px}.topbar p{margin:4px 0 0;color:var(--muted)}.actions{display:flex;gap:10px;flex-wrap:wrap}.btn{border:1px solid var(--line);background:#fff;padding:11px 16px;border-radius:8px;cursor:pointer}.btn.primary{background:linear-gradient(90deg,#6b2080,#8e2488);color:#fff;border:0}.builder-grid{display:grid;grid-template-columns:320px 330px minmax(420px,1fr);gap:16px}.panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:18px;min-width:0}.panel h2{font-size:15px;margin:0 0 14px}.panel h3{font-size:13px;margin:20px 0 8px}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:12px;font-weight:700;color:#505466}.field input,.field textarea,.field select{width:100%;border:1px solid #d9dce5;border-radius:7px;padding:10px 11px;background:#fff}.field textarea{min-height:95px;resize:vertical}.course-search{margin-bottom:10px}.course-list{display:grid;gap:8px;max-height:610px;overflow:auto;padding-right:4px}.course-card{border:1px solid #e0e2e9;border-radius:9px;padding:11px;cursor:pointer}.course-card:hover,.course-card.active{border-color:#8a2b99;box-shadow:0 0 0 2px #8a2b9915}.course-card b{display:block;font-size:14px}.course-card small{display:block;color:#747888;margin-top:3px}.upload-box{border:1px dashed #c8cbd6;border-radius:9px;padding:12px;background:#fafafd}.img-preview{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:#ececf1;display:block;margin-bottom:9px}.option-row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f1f4;font-size:13px}.preview-wrap{background:#1c1e24;border-radius:10px;padding:9px}.preview-frame{width:100%;aspect-ratio:16/9;border:0;background:#111;display:block;border-radius:5px}.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}.stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:15px}.stat span{font-size:11px;color:#777b89;text-transform:uppercase}.stat b{display:block;color:#6f2184;font-size:28px;margin-top:4px}.table-panel{margin-top:16px}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:11px;border-bottom:1px solid #eceef2;text-align:left;font-size:13px}.table th{font-size:11px;color:#777b89;text-transform:uppercase}.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#24a65a;margin-right:6px}.status-dot.off{background:#d84652}.note{font-size:12px;color:#717584;line-height:1.45}.display-body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#020617}.display-screen{width:100vw;height:100vh;position:relative;background:#07102f;color:#fff}.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.hero-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,10,28,.08) 0%,rgba(5,10,28,.28) 38%,rgba(5,10,28,.94) 63%,rgba(5,10,28,.99) 100%)}.display-logo{position:absolute;right:4.3vw;top:3.2vh;font-size:3.2vw;font-weight:850;letter-spacing:-.06em}.display-logo small{display:block;font-size:.67vw;font-weight:400;letter-spacing:0;text-align:right;margin-top:3px}.ldots{position:absolute;right:-.2vw;top:-.15vw;display:flex;gap:.18vw}.ldots i{width:.45vw;height:.45vw;border-radius:50%;background:#a42abb}.ldots i:nth-child(2){background:#d62d92}.ldots i:nth-child(3){background:#f2a17f}.display-content{position:absolute;left:42vw;top:12vh;width:52vw;padding-left:3vw}.dkicker{color:#d84aa9;font-size:1.15vw;font-weight:800;letter-spacing:.08em}.dtitle{font-size:4.8vw;line-height:.9;margin:2.4vh 0 1.5vh;font-weight:900;letter-spacing:-.045em;text-transform:uppercase;max-width:38vw}.dsubtitle{font-size:2vw;margin-bottom:2vh}.ddesc{font-size:1.22vw;line-height:1.35;max-width:31vw;color:#f0f0f3;min-height:3.2em}.dmeta{position:absolute;left:3vw;top:40vh;display:grid;gap:1.5vh;font-size:1.45vw}.dmeta div{display:grid;grid-template-columns:2.5vw 1fr;align-items:center}.dmeta .ico{color:#d03a9d;font-size:1.8vw}.dcode{margin-top:.7vh;color:#d6d6de;font-size:1vw}.qr-area{position:absolute;right:3.6vw;bottom:18vh;text-align:center}.qr-area img{width:12vw;height:12vw;background:#fff;padding:.55vw;border-radius:.6vw}.scan{font-family:"Segoe Print","Bradley Hand",cursive;font-size:1.5vw;transform:rotate(-4deg);margin-top:.4vh}.avail{position:absolute;left:4vw;bottom:18vh;width:8.5vw;height:8.5vw;border-radius:50%;background:linear-gradient(135deg,#70217f,#a02591);display:grid;place-items:center;text-align:center;font-size:1vw;font-weight:800}.printbar{position:absolute;left:0;right:0;bottom:0;height:11vh;border:0;color:#fff;background:linear-gradient(90deg,#632078,#8b2586,#69226f);display:flex;align-items:center;justify-content:center;gap:1.2vw;font-size:1.35vw;cursor:pointer}.printbar .print-icon{font-size:2vw}.display-toast{position:absolute;left:50%;bottom:13vh;transform:translateX(-50%);background:#fff;color:#10152c;padding:.9vw 1.4vw;border-radius:999px;font-size:1vw;font-weight:700;opacity:0;transition:.2s}.display-toast.show{opacity:1}.no-image-bg{position:absolute;inset:0;background:radial-gradient(circle at 22% 40%,#53305a 0,#141933 38%,#07102f 75%)}.flyer-body{background:#e9eaee;padding:20px}.flyer{width:210mm;min-height:297mm;margin:auto;background:#fff;color:#111;padding:16mm 15mm 13mm;position:relative;box-shadow:0 12px 35px rgba(0,0,0,.12)}.flyer-top{display:flex;justify-content:space-between;align-items:start}.flyer-logo{font-size:24pt;font-weight:850;color:#07102f}.flyer-kicker{color:#94248f;font-size:10pt;font-weight:800;margin-top:12mm}.flyer h1{font-size:34pt;line-height:.94;margin:4mm 0 2mm;color:#07102f}.flyer h2{font-size:16pt;font-weight:400;margin:0 0 7mm}.flyer-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:9mm}.flyer-photo{width:100%;height:90mm;object-fit:cover;background:#eee}.flyer-desc{font-size:11pt;line-height:1.48;margin-top:7mm}.flyer-meta{display:grid;gap:4mm;font-size:11pt;margin-top:8mm}.flyer-qr{width:42mm;height:42mm}.flyer-code{font-size:9pt;color:#666;margin-top:2mm}.flyer-footer{position:absolute;left:0;right:0;bottom:0;height:18mm;background:#07102f;color:#fff;padding:5mm 15mm;display:flex;justify-content:space-between;align-items:center}@media print{body{background:#fff;padding:0}.flyer{box-shadow:none;margin:0;width:210mm;height:297mm;min-height:297mm}@page{size:A4;margin:0}}@media(max-width:1150px){.builder-grid{grid-template-columns:280px 300px 1fr}.builder{grid-template-columns:190px 1fr}.main{padding:18px}.stats-row{grid-template-columns:repeat(2,1fr)}}
+
+/* --- v4 fixes: Builder textareas + safe display bounds --- */
+.auto-textarea{
+  width:100%; min-height:54px!important; height:auto; overflow:hidden!important;
+  resize:none!important; line-height:1.45;
+}
+.playlist-actions{display:flex;gap:6px;margin-top:8px}
+
+/* Text areas on the 48" display are deliberately bounded.
+   Long course names shrink via fit.js and can never overlap metadata. */
+.display-content{
+  left:42vw!important; top:10.5vh!important; width:53vw!important; height:76vh!important;
+  padding-left:3vw!important; padding-right:2vw!important;
+}
+.dkicker{height:3.5vh;display:flex;align-items:center}
+.dtitle{
+  width:39vw!important;
+  height:18.5vh!important;
+  max-width:39vw!important;
+  margin:1.8vh 0 .7vh!important;
+  line-height:.92!important;
+  overflow:hidden!important;
+  display:block!important;
+  overflow-wrap:anywhere;
+}
+.dsubtitle{
+  width:34vw; height:5.5vh; margin:0 0 1.5vh!important;
+  font-size:1.75vw!important; line-height:1.15; overflow:hidden;
+}
+.ddesc{
+  width:31vw!important; max-width:31vw!important;
+  height:10.5vh!important; min-height:0!important;
+  line-height:1.32!important; overflow:hidden!important;
+  display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical;
+}
+.dmeta{
+  left:3vw!important; top:43.5vh!important; width:35vw;
+  gap:1.15vh!important; font-size:1.28vw!important;
+}
+.dmeta div{grid-template-columns:2.2vw 1fr!important;min-width:0}
+.dmeta div span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dmeta .ico{font-size:1.55vw!important}
+.dcode{
+  margin-top:.4vh!important; font-size:.95vw!important; color:#d8d9e0!important;
+  display:block!important; white-space:nowrap!important;
+}
+.qr-area{right:3.4vw!important;bottom:16vh!important}
+.qr-area img{width:11.5vw!important;height:11.5vw!important}
+.scan{font-size:1.35vw!important}
+.printbar{height:10.5vh!important;font-size:1.22vw!important}
+.avail{bottom:15.5vh!important}
+@media (max-width:1200px){
+  .dtitle{height:19vh!important}
+  .ddesc{height:11vh!important}
+  .dmeta{top:44vh!important}
+}
+
+/* v6: Textfelder passen sich exakt dem Inhalt an */
+.field textarea,
+textarea.auto-textarea{
+  min-height:46px !important;
+  height:46px;
+  overflow:hidden !important;
+  resize:none !important;
+  line-height:1.45;
+  box-sizing:border-box;
+}
+
+.archive-pill{
+  display:inline-block;
+  margin-top:7px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:#f2edf5;
+  color:#76258a;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.05em;
+}
+
+/* v12: Playlist-Einträge sind direkt editierbar */
+.playlist-card{padding:0!important;overflow:hidden}
+.playlist-main{
+  padding:11px;
+  cursor:pointer;
+  transition:background .15s ease;
+}
+.playlist-main:hover{background:#faf7fc}
+.playlist-card.active .playlist-main{background:#f8f1fb}
+.playlist-edit-hint{
+  margin-top:6px!important;
+  color:#76258a!important;
+  font-weight:700;
+  font-size:10px!important;
+}
+.playlist-card .playlist-actions{
+  padding:0 11px 11px;
+  margin-top:0;
+}
+
+/* v13: mehr Luft zwischen mehrzeiligen Kurstiteln */
+.dtitle{
+  line-height:1.04 !important;
+}
+
+/* v17 – UniPop Corporate Branding
+   Colours sampled directly from the supplied UniPop logo:
+   Dark blue  #0D1C55
+   Light blue #B6DEDF
+*/
+:root{
+  --navy:#0D1C55 !important;
+  --purple:#0D1C55 !important;
+  --magenta:#B6DEDF !important;
+}
+
+/* Main display */
+.display-screen{
+  background:#0D1C55 !important;
+}
+.no-image-bg{
+  background:
+    radial-gradient(circle at 22% 40%, #26396f 0%, #17275f 38%, #0D1C55 75%) !important;
+}
+.hero-overlay{
+  background:linear-gradient(
+    90deg,
+    rgba(13,28,85,.08) 0%,
+    rgba(13,28,85,.30) 38%,
+    rgba(13,28,85,.94) 63%,
+    rgba(13,28,85,.99) 100%
+  ) !important;
+}
+
+/* Light UniPop blue replaces the magenta/purple accents */
+.dkicker,
+.dmeta .ico{
+  color:#B6DEDF !important;
+}
+
+.avail{
+  background:#B6DEDF !important;
+  color:#0D1C55 !important;
+  box-shadow:0 10px 30px rgba(13,28,85,.28) !important;
+}
+
+.printbar{
+  background:linear-gradient(90deg,#0D1C55 0%,#183377 50%,#0D1C55 100%) !important;
+  color:#fff !important;
+}
+
+/* Real supplied logo */
+.display-logo{
+  position:absolute !important;
+  right:3.3vw !important;
+  top:2.6vh !important;
+  width:14vw !important;
+  height:auto !important;
+  font-size:0 !important;
+  letter-spacing:0 !important;
+}
+.display-logo img{
+  display:block;
+  width:100%;
+  height:auto;
+  object-fit:contain;
+}
+
+/* Remove any decorative dots that might remain from old versions */
+.display-logo .ldots,
+.display-logo .brand-dots,
+.display-logo .logo-dots{
+  display:none !important;
+}
+
+/* v20 — ONLY visible-logo positioning correction.
+   unipop-logo.png has been physically cropped to its visible pixels,
+   therefore these 8mm are measured to the visible logo itself. */
+.display-logo{
+  top:8mm !important;
+  right:8mm !important;
+  width:42mm !important;
+  height:auto !important;
+}
+.display-logo img{
+  display:block !important;
+  width:100% !important;
+  height:auto !important;
+}
+
+/* v22 printer icon */
+.printbar .print-icon{
+  width:2.05vw;
+  height:2.05vw;
+  min-width:28px;
+  min-height:28px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:#B6DEDF;
+}
+.printbar .print-icon svg{width:100%;height:100%;display:block}
+
+/* v22 A4 flyer */
+.flyer-body{background:#eceef2;padding:16px;margin:0}
+.flyer-ref{
+  width:210mm;height:297mm;min-height:297mm;margin:0 auto;padding:0;
+  background:#fff;color:#111;position:relative;overflow:hidden;
+  box-shadow:0 12px 36px rgba(0,0,0,.16);font-family:Arial,Helvetica,sans-serif
+}
+.flyer-upper{height:55%;padding:14mm 15mm 8mm;background:#fff}
+.flyer-ref .flyer-kicker{
+  color:#0D1C55;font-size:10.5pt;font-weight:800;letter-spacing:.035em;margin:0 0 9mm
+}
+.flyer-ref h1{
+  margin:0;color:#0D1C55;font-size:33pt;line-height:1.02;letter-spacing:-.025em;
+  text-transform:uppercase;max-width:150mm
+}
+.flyer-ref h2{
+  margin:4mm 0 0;font-size:17pt;line-height:1.15;font-weight:400;color:#171923
+}
+.flyer-info-row{
+  display:grid;grid-template-columns:1fr 49mm;gap:10mm;align-items:end;margin-top:14mm
+}
+.flyer-meta-ref{display:grid;gap:5mm;font-size:12pt}
+.flyer-meta-ref>div{display:grid;grid-template-columns:10mm 1fr;align-items:center}
+.flyer-meta-ref .ficon{color:#0D1C55;font-size:19pt;line-height:1}
+.flyer-meta-ref .flyer-code{display:block;color:#666;font-size:9.5pt;margin-top:1mm}
+.flyer-qr-wrap{text-align:center}
+.flyer-ref .flyer-qr{
+  width:45mm;height:45mm;padding:2mm;background:#fff;border:1.1mm solid #0D1C55;border-radius:4mm
+}
+.flyer-scan{
+  margin-top:2mm;font-family:"Segoe Print","Bradley Hand",cursive;font-style:italic;
+  font-size:14pt;transform:rotate(-4deg);color:#0D1C55
+}
+.flyer-lower{height:36%;display:grid;grid-template-columns:60% 40%}
+.flyer-photo-wrap{background:#e9ebef;position:relative;overflow:hidden}
+.flyer-ref .flyer-photo{width:100%;height:100%;object-fit:cover;display:block}
+.flyer-noimage{
+  width:100%;height:100%;display:none;place-items:center;
+  background:linear-gradient(135deg,#dfe5ee,#c8d1e0);color:#0D1C55;font-weight:800;font-size:30pt
+}
+.flyer-description-panel{background:#0D1C55;color:#fff;padding:10mm 9mm 8mm}
+.flyer-availability{
+  width:34mm;height:34mm;border-radius:50%;background:#B6DEDF;color:#0D1C55;
+  display:grid;place-items:center;text-align:center;font-size:9.5pt;font-weight:800;line-height:1.2;margin-bottom:8mm
+}
+.flyer-description-panel h3{margin:0 0 5mm;font-size:12pt;letter-spacing:.03em}
+.flyer-ref .flyer-desc{margin:0;color:#fff;font-size:10.5pt;line-height:1.47}
+.flyer-footer-ref{
+  position:absolute;left:0;right:0;bottom:0;height:9%;background:#07102f;
+  display:flex;align-items:center;padding:5mm 15mm
+}
+.flyer-real-logo{height:16mm;width:auto;display:block;object-fit:contain}
+@media print{
+  html,body{width:210mm;height:297mm;margin:0!important;padding:0!important;background:#fff!important}
+  .flyer-ref{width:210mm!important;height:297mm!important;min-height:297mm!important;margin:0!important;box-shadow:none!important}
+  @page{size:A4 portrait;margin:0}
+}
+
+/* v26 flyer text safety */
+.flyer-description-panel .flyer-desc{
+  max-height:74mm;
+  overflow:hidden;
+  line-height:1.38;
+}
+
+/* v27 – Flyer: more room for text, no badge/kicker */
+.flyer-ref .flyer-upper{
+  height:52% !important;
+  padding-top:12mm !important;
+}
+.flyer-ref .flyer-lower{
+  height:39% !important;
+  grid-template-columns:58% 42% !important;
+}
+.flyer-description-panel{
+  padding:8mm 8mm 7mm !important;
+  display:flex !important;
+  flex-direction:column !important;
+  min-height:0 !important;
+}
+.flyer-description-panel h3{
+  margin:0 0 4mm !important;
+  flex:0 0 auto;
+}
+.flyer-description-panel .flyer-desc{
+  flex:1 1 auto;
+  min-height:0;
+  max-height:none !important;
+  overflow:hidden !important;
+  line-height:1.34 !important;
+}
+
+/* v28 – final A4 footer */
+.flyer-footer-ref{
+  display:grid !important;
+  grid-template-columns:34mm 1fr 48mm !important;
+  align-items:center !important;
+  gap:7mm !important;
+  padding:4mm 10mm !important;
+  color:#fff !important;
+}
+.flyer-footer-logo{
+  height:100%;display:flex;align-items:center;justify-content:center;
+  border-right:.3mm solid rgba(255,255,255,.75);padding-right:7mm
+}
+.flyer-footer-logo img{max-height:16mm;max-width:28mm;width:auto}
+.flyer-footer-contact,.flyer-footer-address{
+  display:flex;flex-direction:column;gap:.7mm;font-size:7.5pt;line-height:1.45
+}
+.flyer-footer-contact strong{font-size:8pt;margin-bottom:.5mm}
+.flyer-footer-address{border-left:.3mm solid rgba(255,255,255,.75);padding-left:7mm}
+
+/* v29 – force UniPop backgrounds when printing */
+@media print {
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .flyer-description-panel {
+    background: #0D1C55 !important;
+    color: #fff !important;
+  }
+  .flyer-description-panel h3,
+  .flyer-description-panel .flyer-desc {
+    color: #fff !important;
+  }
+  .flyer-footer-ref {
+    background: #07102f !important;
+    color: #fff !important;
+  }
+}
+
+.display-manager-panel{margin-bottom:16px}.display-manager-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.display-manager-head h2{margin:0 0 5px;font-size:17px}.display-manager-actions{display:flex;gap:8px;flex-wrap:wrap}.display-cards{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:10px;margin-top:15px}.display-card{border:1px solid #e0e2e9;background:#fff;border-radius:10px;padding:13px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px}.display-card.active{border-color:#0D1C55;box-shadow:0 0 0 2px rgba(13,28,85,.12)}.display-card-name{font-size:14px;font-weight:800;color:#0D1C55}.display-card-meta{font-size:11px;color:#626777}.display-card-url{font-size:10px;color:#9296a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}.modal-backdrop{position:fixed;inset:0;z-index:9999;background:rgba(5,10,28,.56);display:grid;place-items:center;padding:20px}.modal-card{width:min(440px,92vw);background:#fff;border-radius:14px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.2)}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}@media(max-width:1100px){.display-cards{grid-template-columns:repeat(2,1fr)}}
+
+/* v43 – never show browser broken-image artifact */
+.hero-img:not([src]),
+.hero-img[src=""]{
+  display:none !important;
+}
+
+.ai-generated-badge{
+ position:absolute;top:14px;left:14px;z-index:30;
+ padding:6px 10px;border-radius:7px;
+ background:rgba(25,25,28,.72);color:#fff;
+ font:600 clamp(12px,1.0vw,17px)/1.15 Arial,Helvetica,sans-serif;
+ letter-spacing:.01em;box-shadow:0 1px 4px rgba(0,0,0,.18);
+ pointer-events:none;
+}
+.ai-label-toggle{display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:600;font-size:14px}
+.ai-label-toggle input{width:18px;height:18px}
+
+
+/* v47 – precise stacking fix */
+.hero-img,
+#heroImg{
+  position:absolute !important;
+  z-index:0 !important;
+}
+
+/* Keep the actual course content above the hero image */
+.display-content,
+.content,
+.course-content,
+.display-copy,
+.text-panel,
+.details,
+.meta,
+.qr-area,
+#qrArea,
+.printbar,
+#dTitle,
+#dSubtitle,
+#dDesc,
+#dDate,
+#dTime,
+#dPlace,
+#dTrainer,
+#dCode{
+  position:relative;
+  z-index:2;
+}
+
+/* AI label alone stays on top of everything */
+.ai-generated-badge{
+  position:absolute !important;
+  top:14px !important;
+  left:14px !important;
+  z-index:50 !important;
+  pointer-events:none !important;
+}
+
+/* v48 – QR + print bar always visible on image slides */
+#qrArea,
+.qr-area{
+  position:absolute !important;
+  right:4.2% !important;
+  bottom:16.5% !important;
+  z-index:20 !important;
+}
+
+#printBar,
+.printbar{
+  position:absolute !important;
+  left:0 !important;
+  right:0 !important;
+  bottom:0 !important;
+  z-index:25 !important;
+}
+
+/* Keep course text/meta above image as well */
+.display-content,
+.course-content,
+.text-panel,
+.details,
+.meta{
+  position:relative !important;
+  z-index:10 !important;
+}
+
+/* AI label remains topmost */
+.ai-generated-badge{
+  z-index:40 !important;
+}
+
+/* v50 printed flyer */
+@media print {
+  .flyer-ref .flyer-lower { transform: translateY(-5mm) !important; }
+  .flyer-footer-ref { bottom: 5mm !important; }
+  .bottom-blue-strip {
+    position:absolute; left:0; right:0; bottom:0; height:5mm;
+    background:#07102f !important;
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+}
+
+/* v51 – visually balanced footer top/bottom blue space */
+.flyer-footer-ref{
+  padding-top:3mm !important;
+  padding-bottom:3mm !important;
+  align-items:center !important;
+}
+.flyer-footer-logo,
+.flyer-footer-contact,
+.flyer-footer-address{
+  align-self:center !important;
+}
+
+/* v49 · UniPop Local Inject — isolated external-image slide mode.
+   Existing course styles remain untouched; this class is present only while
+   the runtime mixer displays a scheduled external image. */
+.display-screen.external-slide{background:#0D1C55!important}
+.display-screen.external-slide .hero-img{z-index:1!important;width:100%!important;height:100%!important;inset:0!important}
+.display-screen.external-slide .hero-overlay,
+.display-screen.external-slide .display-logo,
+.display-screen.external-slide .display-content,
+.display-screen.external-slide .avail,
+.display-screen.external-slide .qr-area,
+.display-screen.external-slide .printbar,
+.display-screen.external-slide .ai-generated-badge{display:none!important}
+.display-screen.external-slide .no-image-bg{z-index:0!important;background:#0D1C55!important}
+
+
+/* UniPop Inject: dedicated fullscreen layer. This sits above the entire standard UniPop UI. */
+.external-stage{position:absolute;inset:0;z-index:2147483000;background:#000;display:none;overflow:hidden}
+.external-stage.active{display:block!important}
+.external-stage img{display:block;width:100%;height:100%;margin:0;padding:0;border:0;object-fit:contain;background:#000}
+.external-stage.cover img{object-fit:cover}
+.external-stage.contain img{object-fit:contain}
+
+/* UniPop Inject fullscreen v4 cache-busted build */
