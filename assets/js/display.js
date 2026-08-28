@@ -1,6 +1,7 @@
 (async function(){
  const qs=new URLSearchParams(location.search),screenId=qs.get('screen')||UNIPOP_CONFIG.defaultScreen,$=id=>document.getElementById(id);
- let assignment=UniStore.getAssignment(screenId),idx=0,current=null,currentQr='';
+ const screenEl=document.querySelector('.display-screen');
+ let assignment=UniStore.getAssignment(screenId),idx=0,current=null,currentQr='',activeInjections=[],runtime=[],slideTimer=null;
  try{
    const remoteAssignment=await Promise.race([
      UniHybrid.getAssignment(screenId),
@@ -9,56 +10,107 @@
    if(remoteAssignment?.items?.length) assignment=remoteAssignment;
  }catch(e){console.warn('Remote assignment startup skipped',e)}
  if(!assignment?.items?.length){try{const c=(await UniData.loadCourses())[0];assignment={name:'Auto',items:[{course:c,image:await UniImageStore.get(c.id)||'',displayText:UniData.shorten(c.description,245)}],duration:UNIPOP_CONFIG.slideSeconds,showQR:true,showPrint:true}}catch(e){return}}
+
  function qr(url){return 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=10&data='+encodeURIComponent(url||UNIPOP_CONFIG.qrFallback)}
- async function show(i){
-   const it=assignment.items[i%assignment.items.length],c=it.course;current=it;
-   const aiBadge=$('aiGeneratedBadge'); if(aiBadge) aiBadge.style.display=(it.aiGenerated||c.aiGenerated)?'block':'none';currentQr=qr(c.courseUrl||c.url||UNIPOP_CONFIG.qrFallback);
-   $('dTitle').textContent=c.title||'Cours UniPop';$('dSubtitle').textContent=c.subtitle||c.subject||'';$('dDesc').textContent=it.displayText||UniData.shorten(c.description,245);$('dDate').textContent=c.date||'';$('dTime').textContent=c.time||'';$('dPlace').textContent=c.place||'';$('dTrainer').textContent=c.trainer||'UniPop';$('dCode').textContent='Code : '+(c.code||'—');
-   let image=it.imageUrl||it.image||UniHybrid.getRemoteImageUrl(c.id)||'';
-   if(!image){
-     image=await UniImageStore.get(c.id)||'';
-   } 
+ function shuffle(list){
+   const a=[...(list||[])];
+   for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+   return a;
+ }
+ function buildRuntime(){
+   const courses=(assignment?.items||[]).filter(x=>x?.course);
+   const now=Date.now();
+   const external=shuffle((activeInjections||[]).filter(x=>x?.image_url&&x.enabled!==false&&new Date(x.starts_at).getTime()<=now&&new Date(x.ends_at).getTime()>=now));
+   if(!external.length) return courses.map(item=>({type:'course',item}));
+   if(!courses.length) return [];
+
+   // Hard rule: two UniPop slides for every one external slide.
+   // The longer side determines the cycle length so all UniPop courses and all
+   // active external images are represented. External order is reshuffled each cycle.
+   const blocks=Math.max(Math.ceil(courses.length/2),external.length);
+   const out=[];let ci=0;
+   for(let b=0;b<blocks;b++){
+     out.push({type:'course',item:courses[ci%courses.length]});ci++;
+     out.push({type:'course',item:courses[ci%courses.length]});ci++;
+     out.push({type:'external-image',item:external[b%external.length]});
+   }
+   return out;
+ }
+ async function loadActiveInjections(){
+   try{activeInjections=window.UniInject?await UniInject.getActiveInjections(screenId):[]}
+   catch(e){console.warn('Inject refresh skipped; standard UniPop content continues.',e);activeInjections=[]}
+ }
+ function setHero(image,fit='cover'){
    const hero=$('heroImg');
+   hero.style.objectFit=fit==='contain'?'contain':'cover';
+   hero.style.background='#0D1C55';
    if(image){
-     hero.style.display='none';
-     $('noImage').style.display='block';
-     hero.onload=()=>{
-       hero.style.display='block';
-       $('noImage').style.display='none';
-     };
-     hero.onerror=()=>{
-       hero.removeAttribute('src');
-       hero.style.display='none';
-       $('noImage').style.display='block';
-     };
+     hero.style.display='none';$('noImage').style.display='block';
+     hero.onload=()=>{hero.style.display='block';$('noImage').style.display='none'};
+     hero.onerror=()=>{hero.removeAttribute('src');hero.style.display='none';$('noImage').style.display='block'};
      hero.src=image;
    }else{
-     hero.removeAttribute('src');
-     hero.style.display='none';
-     $('noImage').style.display='block';
+     hero.removeAttribute('src');hero.style.display='none';$('noImage').style.display='block';
    }
-   $('qrImg').src=currentQr;
-   $('qrArea').style.display=assignment.showQR===false?'none':'block';
-   $('printBar').style.display=assignment.showPrint===false?'none':'flex';
-   requestAnimationFrame(()=>window.UniDisplayFit&&window.UniDisplayFit());
-   UniHybrid.heartbeat(screenId,{courseCode:c.code,title:c.title,campaign:assignment.name||'',slide:i%assignment.items.length});
  }
- await show(idx); const seconds=Math.max(5,Number(assignment.duration)||UNIPOP_CONFIG.slideSeconds); if(assignment.items.length>1)setInterval(async()=>{idx=(idx+1)%assignment.items.length;await show(idx)},seconds*1000);setInterval(()=>{if(current)UniHybrid.heartbeat(screenId,{courseCode:current.course.code,title:current.course.title,campaign:assignment.name||'',slide:idx})},30000);
+ async function showCourse(it,slideIndex){
+   const c=it.course;current=it;screenEl?.classList.remove('external-slide');
+   const aiBadge=$('aiGeneratedBadge');if(aiBadge)aiBadge.style.display=(it.aiGenerated||c.aiGenerated)?'block':'none';
+   currentQr=qr(c.courseUrl||c.url||UNIPOP_CONFIG.qrFallback);
+   $('dTitle').textContent=c.title||'Cours UniPop';$('dSubtitle').textContent=c.subtitle||c.subject||'';$('dDesc').textContent=it.displayText||UniData.shorten(c.description,245);$('dDate').textContent=c.date||'';$('dTime').textContent=c.time||'';$('dPlace').textContent=c.place||'';$('dTrainer').textContent=c.trainer||'UniPop';$('dCode').textContent='Code : '+(c.code||'—');
+   let image=it.imageUrl||it.image||UniHybrid.getRemoteImageUrl(c.id)||'';
+   if(!image)image=await UniImageStore.get(c.id)||'';
+   setHero(image,'cover');
+   $('qrImg').src=currentQr;$('qrArea').style.display=assignment.showQR===false?'none':'block';$('printBar').style.display=assignment.showPrint===false?'none':'flex';
+   requestAnimationFrame(()=>window.UniDisplayFit&&window.UniDisplayFit());
+   UniHybrid.heartbeat(screenId,{courseCode:c.code,title:c.title,campaign:assignment.name||'',slide:slideIndex});
+ }
+ async function showExternal(inj,slideIndex){
+   current={type:'external-image',...inj};currentQr='';screenEl?.classList.add('external-slide');
+   const aiBadge=$('aiGeneratedBadge');if(aiBadge)aiBadge.style.display='none';
+   $('qrArea').style.display='none';$('printBar').style.display='none';
+   setHero(inj.image_url,inj.fit||'contain');
+   UniHybrid.heartbeat(screenId,{courseCode:'INJECT',title:(inj.organization||inj.display_name||'External content'),campaign:'UniPop Local · Inject',slide:slideIndex});
+ }
+ async function showRuntime(slideIndex){
+   if(!runtime.length)return;
+   const entry=runtime[slideIndex%runtime.length];
+   if(entry.type==='external-image')await showExternal(entry.item,slideIndex);
+   else await showCourse(entry.item,slideIndex);
+ }
+ function secondsFor(entry){return entry?.type==='external-image'?Math.max(5,Number(entry.item?.duration_seconds)||10):Math.max(5,Number(assignment.duration)||UNIPOP_CONFIG.slideSeconds)}
+ async function play(){
+   clearTimeout(slideTimer);
+   if(!runtime.length)return;
+   if(idx>=runtime.length){idx=0;runtime=buildRuntime()}
+   await showRuntime(idx);
+   const wait=secondsFor(runtime[idx]);
+   slideTimer=setTimeout(async()=>{idx++;if(idx>=runtime.length){idx=0;runtime=buildRuntime()}await play()},wait*1000);
+ }
+
+ await loadActiveInjections();runtime=buildRuntime();await play();
+ setInterval(()=>{
+   if(!current)return;
+   if(current.type==='external-image')UniHybrid.heartbeat(screenId,{courseCode:'INJECT',title:(current.organization||current.display_name||'External content'),campaign:'UniPop Local · Inject',slide:idx});
+   else if(current.course)UniHybrid.heartbeat(screenId,{courseCode:current.course.code,title:current.course.title,campaign:assignment.name||'',slide:idx});
+ },30000);
+
  const remoteRefresh=Math.max(10,Number(window.UNIPOP_SUPABASE?.refreshSeconds)||20);
  setInterval(async()=>{
    try{
-     const fresh=await UniHybrid.getAssignment(screenId);
-     const oldStamp=assignment?.publishedAt||'';
-     const newStamp=fresh?.publishedAt||'';
-     if(fresh?.items?.length && JSON.stringify(fresh)!==JSON.stringify(assignment)){
-       assignment=fresh;
-       idx=0;
-       await show(idx);
-     }
-   }catch(e){console.error('Display refresh failed',e)}
+     const [fresh,injects]=await Promise.all([
+       UniHybrid.getAssignment(screenId),
+       window.UniInject?UniInject.getActiveInjections(screenId):Promise.resolve([])
+     ]);
+     const assignmentChanged=Boolean(fresh?.items?.length&&JSON.stringify(fresh)!==JSON.stringify(assignment));
+     const injectChanged=JSON.stringify(injects||[])!==JSON.stringify(activeInjections||[]);
+     if(assignmentChanged)assignment=fresh;
+     if(injectChanged)activeInjections=injects||[];
+     if(assignmentChanged||injectChanged){runtime=buildRuntime();idx=0;await play()}
+   }catch(e){console.error('Display refresh failed; current rotation continues.',e)}
  },remoteRefresh*1000);
  function doPrint(){
- if(assignment.showPrint===false||!current)return;
+ if(assignment.showPrint===false||!current||current.type==='external-image')return;
 
  const allowed=UniStore.canPrint(screenId), toast=$('toast');
  if(!allowed.ok){
