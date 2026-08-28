@@ -151,7 +151,7 @@ window.UniInject = (function(){
     if(!enabled())return [];
     const now=new Date().toISOString();
     try{
-      const q='media_injections?select=id,screen_slug,image_url,starts_at,ends_at,duration_seconds,fit,organization,display_name,created_at&screen_slug=eq.'+encodeURIComponent(screenSlug)+'&enabled=eq.true&starts_at=lte.'+encodeURIComponent(now)+'&ends_at=gte.'+encodeURIComponent(now)+'&order=created_at.asc';
+      const q='media_injections?select=id,screen_slug,image_url,starts_at,ends_at,duration_seconds,fit,organization,display_name,created_at,updated_at&screen_slug=eq.'+encodeURIComponent(screenSlug)+'&enabled=eq.true&starts_at=lte.'+encodeURIComponent(now)+'&ends_at=gte.'+encodeURIComponent(now)+'&order=created_at.asc';
       return await rest(q,{},false)||[];
     }catch(e){
       // Compatibility rule: if Inject is not installed yet, the existing display must keep working.
