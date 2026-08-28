@@ -69,7 +69,23 @@
      }
    });
  }
+ function hideExternalStage(){
+   const stage=$('externalStage'),img=$('externalStageImg');
+   if(stage){stage.classList.remove('active','cover','contain');stage.setAttribute('aria-hidden','true')}
+   if(img){img.removeAttribute('src')}
+ }
+ function showExternalStage(url,fit){
+   const stage=$('externalStage'),img=$('externalStageImg');
+   if(!stage||!img)return false;
+   stage.classList.remove('cover','contain');
+   stage.classList.add(fit==='cover'?'cover':'contain');
+   stage.classList.add('active');
+   stage.setAttribute('aria-hidden','false');
+   img.src=url||'';
+   return true;
+ }
  async function showCourse(it,slideIndex){
+   hideExternalStage();
    const c=it.course;current=it;screenEl?.classList.remove('external-slide');
    setExternalChromeHidden(false);
    const aiBadge=$('aiGeneratedBadge');if(aiBadge)aiBadge.style.display=(it.aiGenerated||c.aiGenerated)?'block':'none';
@@ -83,9 +99,9 @@
    UniHybrid.heartbeat(screenId,{courseCode:c.code,title:c.title,campaign:assignment.name||'',slide:slideIndex});
  }
  async function showExternal(inj,slideIndex){
-   current={type:'external-image',...inj};currentQr='';screenEl?.classList.add('external-slide');
-   setExternalChromeHidden(true);
-   setHero(inj.image_url,inj.fit||'contain');
+   current={type:'external-image',...inj};currentQr='';
+   // Dedicated fullscreen layer: no UniPop overlay, logo, text, QR or print UI can sit above it.
+   showExternalStage(inj.image_url,inj.fit||'contain');
    UniHybrid.heartbeat(screenId,{courseCode:'INJECT',title:(inj.organization||inj.display_name||'External content'),campaign:'UniPop Local · Inject',slide:slideIndex});
  }
  async function showRuntime(slideIndex){
