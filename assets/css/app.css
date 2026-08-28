@@ -449,3 +449,17 @@ textarea.auto-textarea{
 .flyer-footer-address{
   align-self:center !important;
 }
+
+/* v49 · UniPop Local Inject — isolated external-image slide mode.
+   Existing course styles remain untouched; this class is present only while
+   the runtime mixer displays a scheduled external image. */
+.display-screen.external-slide{background:#0D1C55!important}
+.display-screen.external-slide .hero-img{z-index:1!important;width:100%!important;height:100%!important;inset:0!important}
+.display-screen.external-slide .hero-overlay,
+.display-screen.external-slide .display-logo,
+.display-screen.external-slide .display-content,
+.display-screen.external-slide .avail,
+.display-screen.external-slide .qr-area,
+.display-screen.external-slide .printbar,
+.display-screen.external-slide .ai-generated-badge{display:none!important}
+.display-screen.external-slide .no-image-bg{z-index:0!important;background:#0D1C55!important}
