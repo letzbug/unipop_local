@@ -53,8 +53,25 @@
      hero.removeAttribute('src');hero.style.display='none';$('noImage').style.display='block';
    }
  }
+ function setExternalChromeHidden(hidden){
+   const selectors=['.hero-overlay','.display-logo','.display-content','.avail','#qrArea','#printBar','#aiGeneratedBadge'];
+   selectors.forEach(sel=>{
+     const el=document.querySelector(sel);
+     if(!el)return;
+     if(hidden){
+       if(el.dataset.injectPrevDisplay===undefined) el.dataset.injectPrevDisplay=el.style.display||'';
+       el.style.setProperty('display','none','important');
+     }else{
+       const prev=el.dataset.injectPrevDisplay;
+       el.style.removeProperty('display');
+       if(prev!==undefined&&prev!=='') el.style.display=prev;
+       delete el.dataset.injectPrevDisplay;
+     }
+   });
+ }
  async function showCourse(it,slideIndex){
    const c=it.course;current=it;screenEl?.classList.remove('external-slide');
+   setExternalChromeHidden(false);
    const aiBadge=$('aiGeneratedBadge');if(aiBadge)aiBadge.style.display=(it.aiGenerated||c.aiGenerated)?'block':'none';
    currentQr=qr(c.courseUrl||c.url||UNIPOP_CONFIG.qrFallback);
    $('dTitle').textContent=c.title||'Cours UniPop';$('dSubtitle').textContent=c.subtitle||c.subject||'';$('dDesc').textContent=it.displayText||UniData.shorten(c.description,245);$('dDate').textContent=c.date||'';$('dTime').textContent=c.time||'';$('dPlace').textContent=c.place||'';$('dTrainer').textContent=c.trainer||'UniPop';$('dCode').textContent='Code : '+(c.code||'—');
@@ -67,8 +84,7 @@
  }
  async function showExternal(inj,slideIndex){
    current={type:'external-image',...inj};currentQr='';screenEl?.classList.add('external-slide');
-   const aiBadge=$('aiGeneratedBadge');if(aiBadge)aiBadge.style.display='none';
-   $('qrArea').style.display='none';$('printBar').style.display='none';
+   setExternalChromeHidden(true);
    setHero(inj.image_url,inj.fit||'contain');
    UniHybrid.heartbeat(screenId,{courseCode:'INJECT',title:(inj.organization||inj.display_name||'External content'),campaign:'UniPop Local · Inject',slide:slideIndex});
  }
