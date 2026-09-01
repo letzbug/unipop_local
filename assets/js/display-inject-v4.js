@@ -161,20 +161,51 @@
    else if(current.course)UniHybrid.heartbeat(screenId,{courseCode:current.course.code,title:current.course.title,campaign:assignment.name||'',slide:idx});
  },30000);
 
- const remoteRefresh=Math.max(10,Number(window.UNIPOP_SUPABASE?.refreshSeconds)||20);
- setInterval(async()=>{
+ // Auto-sync: public screens must update themselves without anybody touching the browser.
+ // We deliberately poll Supabase every 5 seconds; requests use cache:'no-store' in supabase.js.
+ let refreshBusy=false;
+ async function refreshRemoteContent(){
+   if(refreshBusy)return;
+   refreshBusy=true;
    try{
      const [fresh,injects]=await Promise.all([
        UniHybrid.getAssignment(screenId),
        window.UniInject?UniInject.getActiveInjections(screenId):Promise.resolve([])
      ]);
-     const assignmentChanged=Boolean(fresh?.items?.length&&JSON.stringify(fresh)!==JSON.stringify(assignment));
+
+     const freshHasItems=Boolean(fresh?.items?.length);
+     const assignmentChanged=Boolean(
+       freshHasItems && (
+         fresh.publishedAt!==assignment?.publishedAt ||
+         JSON.stringify(fresh)!==JSON.stringify(assignment)
+       )
+     );
      const injectChanged=JSON.stringify(injects||[])!==JSON.stringify(activeInjections||[]);
-     if(assignmentChanged)assignment=fresh;
+
+     if(assignmentChanged){
+       assignment=fresh;
+       try{UniStore.setAssignment(screenId,fresh)}catch(_){}
+     }
      if(injectChanged)activeInjections=injects||[];
-     if(assignmentChanged||injectChanged){runtime=buildRuntime();idx=0;await play()}
-   }catch(e){console.error('Display refresh failed; current rotation continues.',e)}
- },remoteRefresh*1000);
+
+     if(assignmentChanged||injectChanged){
+       runtime=buildRuntime();
+       idx=0;
+       await play();
+       console.info('UniPop display auto-synced', {screenId,assignmentChanged,injectChanged});
+     }
+   }catch(e){
+     console.error('Display auto-sync failed; current rotation continues.',e);
+   }finally{
+     refreshBusy=false;
+   }
+ }
+ const remoteRefresh=5;
+ setInterval(refreshRemoteContent,remoteRefresh*1000);
+
+ // Self-healing refresh: once per hour the page reloads itself to pick up any
+ // newly deployed HTML/JS/CSS build as well. It happens automatically on-site.
+ setTimeout(()=>location.reload(),60*60*1000);
  function doPrint(){
  if(assignment.showPrint===false||!current||current.type==='external-image')return;
 
