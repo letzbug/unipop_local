@@ -35,7 +35,22 @@ window.UniHybrid = (function(){
 
   async function addDisplay(name){
     const local=UniStore.addDisplay(name);
-    if(remote()) UniRemote.addDisplay(local).catch(e=>console.warn('Remote addDisplay failed',e));
+    if(remote()){
+      try{
+        // IMPORTANT: wait until the display really exists in Supabase before
+        // the builder can copy/publish a playlist to it. Otherwise a playlist
+        // may only exist in this browser's localStorage (race condition).
+        const saved=await Promise.race([
+          UniRemote.addDisplay(local),
+          new Promise((_,rej)=>setTimeout(()=>rej(new Error('Supabase display save timeout')),5500))
+        ]);
+        return saved?{id:saved.slug,name:saved.name,location:saved.location||saved.name,enabled:saved.enabled!==false}:local;
+      }catch(e){
+        console.error('Remote addDisplay failed',e);
+        if(!window.UNIPOP_SUPABASE?.localFallback) throw e;
+        throw new Error('Der neue Screen konnte nicht in Supabase gespeichert werden. Bitte erneut versuchen.');
+      }
+    }
     return local;
   }
 

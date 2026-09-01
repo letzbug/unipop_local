@@ -488,7 +488,13 @@
    const source=$('copySource').value,target=$('copyTarget').value;
    if(!source||!target||source===target){alert('Bitte zwei verschiedene Standorte wählen.');return}
    try{
-     await UniHybrid.copyAssignment(source,target);
+     const copied=await UniHybrid.copyAssignment(source,target);
+     if(UniHybrid.remote() && window.UniRemote?.getAssignment){
+       const remoteCopy=await UniRemote.getAssignment(target);
+       if(!remoteCopy?.items?.length || remoteCopy.items.length!==(copied?.items?.length||0)){
+         throw new Error('Die Playlist-Kopie wurde nicht korrekt an Supabase übertragen. Bitte erneut versuchen.');
+       }
+     }
    }catch(e){
      alert(e.message||e);
      return;
@@ -616,10 +622,20 @@
      const payload=campaignPayload();
      await UniHybrid.setAssignment(target,payload);
 
-     // Sofort kontrollieren, ob der Browser die Playlist wirklich gespeichert hat.
-     const check=await UniHybrid.getAssignment(target);
-     if(!check?.items?.length || check.items.length!==payload.items.length){
-       throw new Error('Die Playlist konnte nicht dauerhaft im Browser gespeichert werden.');
+     // Remote-Check: bei aktivem Supabase darf die Erfolgsmeldung nur kommen,
+     // wenn die Playlist dort wirklich angekommen ist. getAssignment() allein
+     // kann sonst auf localStorage zurückfallen und einen falschen Erfolg melden.
+     let check;
+     if(UniHybrid.remote() && window.UniRemote?.getAssignment){
+       check=await UniRemote.getAssignment(target);
+       if(!check?.items?.length || check.items.length!==payload.items.length){
+         throw new Error('Die Playlist wurde lokal gespeichert, aber nicht korrekt an Supabase übertragen. Bitte erneut veröffentlichen.');
+       }
+     }else{
+       check=await UniHybrid.getAssignment(target);
+       if(!check?.items?.length || check.items.length!==payload.items.length){
+         throw new Error('Die Playlist konnte nicht dauerhaft gespeichert werden.');
+       }
      }
 
      activeDisplayId=target;
