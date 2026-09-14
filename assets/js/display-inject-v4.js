@@ -15,13 +15,63 @@
  function qr(url){return 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=10&data='+encodeURIComponent(url||UNIPOP_CONFIG.qrFallback)}
  function freshUrl(url,version){
    if(!url||/^(data:|blob:)/i.test(url))return url||'';
+   // IMPORTANT: never use Date.now() as a fallback here. A changing query string
+   // turns the same Storage object into a new CDN/browser URL on every render and
+   // can create massive cached egress. Only add a cache-buster when the playlist
+   // or injection really has a stable version timestamp.
+   if(!version)return String(url);
    try{
      const u=new URL(url,location.href);
-     u.searchParams.set('_ucv',String(version||Date.now()));
+     u.searchParams.set('_ucv',String(version));
      return u.href;
    }catch(_){
      const sep=String(url).includes('?')?'&':'?';
-     return String(url)+sep+'_ucv='+encodeURIComponent(String(version||Date.now()));
+     return String(url)+sep+'_ucv='+encodeURIComponent(String(version));
+   }
+ }
+
+ // Persistent on-device image cache for kiosk displays.
+ // The display still polls Supabase for playlist/injection metadata, but an image
+ // is downloaded only once for a given version URL. Cache Storage survives page
+ // reloads and browser restarts, so the hourly self-healing reload does not pull
+ // the whole rotation from Supabase again.
+ const DISPLAY_IMAGE_CACHE='unipop-display-images-v1';
+ const displayImageObjectUrls=new Map();
+ async function cachedDisplayImage(url,version){
+   const versioned=freshUrl(url,version);
+   if(!versioned||/^(data:|blob:)/i.test(versioned))return versioned||'';
+   if(displayImageObjectUrls.has(versioned))return displayImageObjectUrls.get(versioned);
+   if(!('caches' in window))return versioned;
+   try{
+     const cache=await caches.open(DISPLAY_IMAGE_CACHE);
+     let response=await cache.match(versioned,{ignoreMethod:true});
+     if(!response){
+       response=await fetch(versioned,{cache:'no-store'});
+       if(!response.ok)throw new Error('image '+response.status);
+       await cache.put(versioned,response.clone());
+
+       // Remove older cached versions of this same Storage object, while keeping
+       // all other course images. This prevents the kiosk cache from growing forever.
+       try{
+         const current=new URL(versioned,location.href);
+         const keys=await cache.keys();
+         await Promise.all(keys.map(req=>{
+           try{
+             const old=new URL(req.url);
+             return old.origin===current.origin && old.pathname===current.pathname && old.href!==current.href
+               ? cache.delete(req)
+               : Promise.resolve(false);
+           }catch(_){return Promise.resolve(false)}
+         }));
+       }catch(_){}
+     }
+     const blob=await response.blob();
+     const objectUrl=URL.createObjectURL(blob);
+     displayImageObjectUrls.set(versioned,objectUrl);
+     return objectUrl;
+   }catch(e){
+     console.warn('Local display image cache fallback',e);
+     return versioned;
    }
  }
  function shuffle(list){
@@ -127,7 +177,8 @@
    $('dTitle').textContent=c.title||'Cours UniPop';$('dSubtitle').textContent=c.subtitle||c.subject||'';$('dDesc').textContent=it.displayText||UniData.shorten(c.description,245);$('dDate').textContent=c.date||'';$('dTime').textContent=c.time||'';$('dPlace').textContent=c.place||'';$('dTrainer').textContent=c.trainer||'UniPop';$('dCode').textContent='Code : '+(c.code||'—');
    let image=it.imageUrl||it.image||UniHybrid.getRemoteImageUrl(c.id)||'';
    if(!image)image=await UniImageStore.get(c.id)||'';
-   setHero(freshUrl(image,it.updated_at||it.updatedAt||assignment.publishedAt||''),'cover');
+   const cachedImage=await cachedDisplayImage(image,it.updated_at||it.updatedAt||assignment.publishedAt||'');
+   setHero(cachedImage,'cover');
    $('qrImg').src=currentQr;$('qrArea').style.display=assignment.showQR===false?'none':'block';$('printBar').style.display=assignment.showPrint===false?'none':'flex';
    requestAnimationFrame(()=>window.UniDisplayFit&&window.UniDisplayFit());
    UniHybrid.heartbeat(screenId,{courseCode:c.code,title:c.title,campaign:assignment.name||'',slide:slideIndex});
@@ -135,7 +186,8 @@
  async function showExternal(inj,slideIndex){
    current={type:'external-image',...inj};currentQr='';
    // Dedicated fullscreen layer: no UniPop overlay, logo, text, QR or print UI can sit above it.
-   showExternalStage(freshUrl(inj.image_url,inj.updated_at||inj.created_at||''),inj.fit||'contain');
+   const cachedImage=await cachedDisplayImage(inj.image_url,inj.updated_at||inj.created_at||'');
+   showExternalStage(cachedImage,inj.fit||'contain');
    UniHybrid.heartbeat(screenId,{courseCode:'INJECT',title:(inj.organization||inj.display_name||'External content'),campaign:'UniPop Local · Inject',slide:slideIndex});
  }
  async function showRuntime(slideIndex){
