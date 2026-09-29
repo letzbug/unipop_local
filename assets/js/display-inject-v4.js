@@ -207,14 +207,15 @@
  }
 
  await loadActiveInjections();runtime=buildRuntime();await play();
+ const heartbeatMs=Math.max(30,Number(window.UNIPOP_SUPABASE?.heartbeatSeconds)||120)*1000;
  setInterval(()=>{
    if(!current)return;
    if(current.type==='external-image')UniHybrid.heartbeat(screenId,{courseCode:'INJECT',title:(current.organization||current.display_name||'External content'),campaign:'UniPop Local · Inject',slide:idx});
    else if(current.course)UniHybrid.heartbeat(screenId,{courseCode:current.course.code,title:current.course.title,campaign:assignment.name||'',slide:idx});
- },30000);
+ },heartbeatMs);
 
- // Auto-sync: public screens must update themselves without anybody touching the browser.
- // We deliberately poll Supabase every 5 seconds; requests use cache:'no-store' in supabase.js.
+ // Auto-sync: public screens update themselves without anybody touching the browser.
+ // The interval comes from supabase-config.js to keep Supabase traffic low.
  let refreshBusy=false;
  async function refreshRemoteContent(){
    if(refreshBusy)return;
@@ -252,7 +253,7 @@
      refreshBusy=false;
    }
  }
- const remoteRefresh=5;
+ const remoteRefresh=Math.max(30,Number(window.UNIPOP_SUPABASE?.refreshSeconds)||60);
  setInterval(refreshRemoteContent,remoteRefresh*1000);
 
  // Self-healing refresh: once per hour the page reloads itself to pick up any

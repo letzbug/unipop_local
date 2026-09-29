@@ -7,6 +7,6 @@ window.UNIPOP_SUPABASE = {
 
   localFallback: true,
 
-  refreshSeconds: 20,
-  heartbeatSeconds: 30
+  refreshSeconds: 60,
+  heartbeatSeconds: 120
 };

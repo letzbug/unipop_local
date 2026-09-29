@@ -121,13 +121,14 @@
  }
 
  await loadActiveInjections();runtime=buildRuntime();await play();
+ const heartbeatMs=Math.max(30,Number(window.UNIPOP_SUPABASE?.heartbeatSeconds)||120)*1000;
  setInterval(()=>{
    if(!current)return;
    if(current.type==='external-image')UniHybrid.heartbeat(screenId,{courseCode:'INJECT',title:(current.organization||current.display_name||'External content'),campaign:'UniPop Local · Inject',slide:idx});
    else if(current.course)UniHybrid.heartbeat(screenId,{courseCode:current.course.code,title:current.course.title,campaign:assignment.name||'',slide:idx});
- },30000);
+ },heartbeatMs);
 
- const remoteRefresh=Math.max(10,Number(window.UNIPOP_SUPABASE?.refreshSeconds)||20);
+ const remoteRefresh=Math.max(30,Number(window.UNIPOP_SUPABASE?.refreshSeconds)||60);
  setInterval(async()=>{
    try{
      const [fresh,injects]=await Promise.all([

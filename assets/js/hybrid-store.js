@@ -1,5 +1,6 @@
 window.UniHybrid = (function(){
   const remote=()=>window.UniRemote?.enabled?.();
+  const lastRemoteHeartbeat={};
 
   async function getDisplays(defaults){
     let local=UniStore.getDisplays();
@@ -96,8 +97,18 @@ window.UniHybrid = (function(){
   }
 
   function heartbeat(id,extra){
+    // Keep the local status current on every slide, but throttle Supabase writes.
     UniStore.heartbeat(id,extra);
-    if(remote()) UniRemote.heartbeat(id,extra).catch(e=>console.warn('Remote heartbeat failed',e));
+    if(!remote()) return;
+    const intervalMs=Math.max(30,Number(window.UNIPOP_SUPABASE?.heartbeatSeconds)||120)*1000;
+    const now=Date.now();
+    if(now-(lastRemoteHeartbeat[id]||0)<intervalMs) return;
+    lastRemoteHeartbeat[id]=now;
+    UniRemote.heartbeat(id,extra).catch(e=>{
+      // Allow an earlier retry if the remote write failed.
+      lastRemoteHeartbeat[id]=0;
+      console.warn('Remote heartbeat failed',e);
+    });
   }
 
   function addPrint(evt){
