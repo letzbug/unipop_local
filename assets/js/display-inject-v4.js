@@ -16,9 +16,10 @@
  // Cycle: 60s UniPop Local -> 60s daily program -> repeat.
  const DAILY_PROGRAM_DEFAULT_URL='https://letzbug.github.io/signage/';
  const DAILY_PROGRAM_MS=60*1000;
+ const DAILY_FADE_MS=1200;
  // Use one-shot timers instead of setInterval. This makes each transition
  // explicit and prevents a timer phase/reset from leaving the iframe visible.
- let dailyProgramTimer=null,dailyProgramShowing=false;
+ let dailyProgramTimer=null,dailyProgramFadeTimer=null,dailyProgramShowing=false;
  function dailyMeta(){
    const items=Array.isArray(assignment?.items)?assignment.items:[];
    return items.find(it=>it&&it.__unipopDisplayMeta)?.__unipopDisplayMeta||{};
@@ -37,7 +38,7 @@
    if(stage&&frame)return {stage,frame};
    stage=document.createElement('div');
    stage.id='dailyProgramStage';
-   Object.assign(stage.style,{position:'fixed',inset:'0',width:'100vw',height:'100vh',zIndex:'2147483647',background:'#000',display:'none',overflow:'hidden',margin:'0',padding:'0'});
+   Object.assign(stage.style,{position:'fixed',inset:'0',width:'100vw',height:'100vh',zIndex:'2147483647',background:'#000',display:'none',visibility:'hidden',opacity:'0',transition:`opacity ${DAILY_FADE_MS}ms ease-in-out`,overflow:'hidden',margin:'0',padding:'0',pointerEvents:'none'});
    frame=document.createElement('iframe');
    frame.id='dailyProgramFrame';
    frame.title='Tagesprogramm';
@@ -48,14 +49,28 @@
    document.body.appendChild(stage);
    return {stage,frame};
  }
+ function clearDailyFadeTimer(){
+   if(dailyProgramFadeTimer){clearTimeout(dailyProgramFadeTimer);dailyProgramFadeTimer=null}
+ }
  function hideDailyProgram(){
    const {stage}=ensureDailyProgramStage();
-   stage.style.display='none';
-   stage.style.visibility='hidden';
+   clearDailyFadeTimer();
+   // Fade the daily program away so the already-running Local display
+   // becomes visible underneath instead of cutting abruptly to it.
+   stage.style.pointerEvents='none';
+   stage.style.opacity='0';
    dailyProgramShowing=false;
+   dailyProgramFadeTimer=setTimeout(()=>{
+     dailyProgramFadeTimer=null;
+     if(!dailyProgramShowing){
+       stage.style.visibility='hidden';
+       stage.style.display='none';
+     }
+   },DAILY_FADE_MS+80);
  }
  function showDailyProgram(){
    const {stage,frame}=ensureDailyProgramStage();
+   clearDailyFadeTimer();
    const wanted=dailyUrl();
    if(frame.dataset.currentUrl!==wanted){frame.src=wanted;frame.dataset.currentUrl=wanted}
    // externalStageV4 uses the same maximum z-index. Put the daily-program
@@ -63,6 +78,13 @@
    document.body.appendChild(stage);
    stage.style.display='block';
    stage.style.visibility='visible';
+   stage.style.pointerEvents='none';
+   stage.style.opacity='0';
+   // Two animation frames make sure the browser paints the transparent
+   // start state before fading the page in.
+   requestAnimationFrame(()=>requestAnimationFrame(()=>{
+     if(dailyProgramShowing)stage.style.opacity='1';
+   }));
    dailyProgramShowing=true;
    console.info('UniPop daily program SHOW', {screenId,wanted});
  }
