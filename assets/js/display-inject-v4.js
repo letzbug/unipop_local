@@ -17,6 +17,18 @@
  const DAILY_PROGRAM_DEFAULT_URL='https://letzbug.github.io/signage/';
  const DAILY_PROGRAM_MS=60*1000;
  let dailyProgramTimer=null,dailyProgramShowing=false;
+ function dailyMeta(){
+   const items=Array.isArray(assignment?.items)?assignment.items:[];
+   return items.find(it=>it&&it.__unipopDisplayMeta)?.__unipopDisplayMeta||{};
+ }
+ function dailyEnabled(){
+   const meta=dailyMeta();
+   return assignment?.showDailyProgram===true || meta.showDailyProgram===true;
+ }
+ function dailyUrl(){
+   const meta=dailyMeta();
+   return assignment?.dailyProgramUrl || meta.dailyProgramUrl || DAILY_PROGRAM_DEFAULT_URL;
+ }
  function ensureDailyProgramStage(){
    let stage=document.getElementById('dailyProgramStage');
    let frame=document.getElementById('dailyProgramFrame');
@@ -37,14 +49,20 @@
  function hideDailyProgram(){
    const {stage}=ensureDailyProgramStage();
    stage.style.display='none';
+   stage.style.visibility='hidden';
    dailyProgramShowing=false;
  }
  function showDailyProgram(){
    const {stage,frame}=ensureDailyProgramStage();
-   const wanted=assignment?.dailyProgramUrl||DAILY_PROGRAM_DEFAULT_URL;
+   const wanted=dailyUrl();
    if(frame.dataset.currentUrl!==wanted){frame.src=wanted;frame.dataset.currentUrl=wanted}
+   // externalStageV4 uses the same maximum z-index. Put the daily-program
+   // layer last in the DOM every time so it is guaranteed to stay on top.
+   document.body.appendChild(stage);
    stage.style.display='block';
+   stage.style.visibility='visible';
    dailyProgramShowing=true;
+   console.info('UniPop daily program SHOW', {screenId,wanted});
  }
  function stopDailyProgramCycle(){
    if(dailyProgramTimer){clearInterval(dailyProgramTimer);dailyProgramTimer=null}
@@ -52,11 +70,18 @@
  }
  function startDailyProgramCycle(){
    stopDailyProgramCycle();
-   if(assignment?.showDailyProgram!==true)return;
-   // Always begin with UniPop Local for a full minute.
+   if(!dailyEnabled()){
+     console.info('UniPop daily program disabled', {screenId,assignment});
+     return;
+   }
+   // Preload while Local is visible so the switch is instant after one minute.
+   const {frame}=ensureDailyProgramStage();
+   const wanted=dailyUrl();
+   if(frame.dataset.currentUrl!==wanted){frame.src=wanted;frame.dataset.currentUrl=wanted}
    hideDailyProgram();
+   console.info('UniPop daily program enabled', {screenId,wanted});
    dailyProgramTimer=setInterval(()=>{
-     if(assignment?.showDailyProgram!==true){stopDailyProgramCycle();return}
+     if(!dailyEnabled()){stopDailyProgramCycle();return}
      if(dailyProgramShowing)hideDailyProgram();else showDailyProgram();
    },DAILY_PROGRAM_MS);
  }
@@ -215,6 +240,13 @@
    const {stage,img}=ensureExternalStage();
    img.style.objectFit=fit==='cover'?'cover':'contain';
    img.src=url||'';
+   if(dailyProgramShowing){
+     stage.style.display='none';
+     stage.setAttribute('aria-hidden','true');
+     const daily=document.getElementById('dailyProgramStage');
+     if(daily)document.body.appendChild(daily);
+     return true;
+   }
    stage.style.display='block';
    stage.setAttribute('aria-hidden','false');
    return true;
@@ -258,6 +290,9 @@
  }
 
  await loadActiveInjections();runtime=buildRuntime();await play();startDailyProgramCycle();
+ // Diagnostic shortcut: append &dailytest=1 to a display URL to force the
+ // Tagesprogramm layer immediately, independent of the Builder setting.
+ if(qs.get('dailytest')==='1'){assignment.showDailyProgram=true;showDailyProgram();}
  const heartbeatMs=Math.max(30,Number(window.UNIPOP_SUPABASE?.heartbeatSeconds)||120)*1000;
  setInterval(()=>{
    if(!current)return;
@@ -287,11 +322,11 @@
      const injectChanged=JSON.stringify(injects||[])!==JSON.stringify(activeInjections||[]);
 
      if(assignmentChanged){
-       const previousDaily=assignment?.showDailyProgram===true;
-       const previousDailyUrl=assignment?.dailyProgramUrl||DAILY_PROGRAM_DEFAULT_URL;
+       const previousDaily=dailyEnabled();
+       const previousDailyUrl=dailyUrl();
        assignment=fresh;
        try{UniStore.setAssignment(screenId,fresh)}catch(_){}
-       if(previousDaily!==(assignment?.showDailyProgram===true) || previousDailyUrl!==(assignment?.dailyProgramUrl||DAILY_PROGRAM_DEFAULT_URL)){
+       if(previousDaily!==dailyEnabled() || previousDailyUrl!==dailyUrl()){
          startDailyProgramCycle();
        }
      }
