@@ -292,7 +292,7 @@
  await loadActiveInjections();runtime=buildRuntime();await play();startDailyProgramCycle();
  // Diagnostic shortcut: append &dailytest=1 to a display URL to force the
  // Tagesprogramm layer immediately, independent of the Builder setting.
- if(qs.get('dailytest')==='1'){assignment.showDailyProgram=true;showDailyProgram();}
+ if(qs.get('dailytest')==='1'){assignment.showDailyProgram=true;startDailyProgramCycle();showDailyProgram();}
  const heartbeatMs=Math.max(30,Number(window.UNIPOP_SUPABASE?.heartbeatSeconds)||120)*1000;
  setInterval(()=>{
    if(!current)return;
