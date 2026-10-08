@@ -16,6 +16,8 @@
  // Cycle: 60s UniPop Local -> 60s daily program -> repeat.
  const DAILY_PROGRAM_DEFAULT_URL='https://letzbug.github.io/signage/';
  const DAILY_PROGRAM_MS=60*1000;
+ // Use one-shot timers instead of setInterval. This makes each transition
+ // explicit and prevents a timer phase/reset from leaving the iframe visible.
  let dailyProgramTimer=null,dailyProgramShowing=false;
  function dailyMeta(){
    const items=Array.isArray(assignment?.items)?assignment.items:[];
@@ -64,26 +66,52 @@
    dailyProgramShowing=true;
    console.info('UniPop daily program SHOW', {screenId,wanted});
  }
+ function clearDailyProgramTimer(){
+   if(dailyProgramTimer){clearTimeout(dailyProgramTimer);dailyProgramTimer=null}
+ }
+ function scheduleDailyProgram(nextState,delay=DAILY_PROGRAM_MS){
+   clearDailyProgramTimer();
+   dailyProgramTimer=setTimeout(()=>{
+     dailyProgramTimer=null;
+     if(!dailyEnabled()){
+       hideDailyProgram();
+       console.info('UniPop daily program disabled during cycle', {screenId});
+       return;
+     }
+     if(nextState==='show'){
+       showDailyProgram();
+       // Hard return to Local after exactly one minute.
+       scheduleDailyProgram('hide',DAILY_PROGRAM_MS);
+     }else{
+       hideDailyProgram();
+       // Stay on Local for exactly one minute, then show the daily program again.
+       scheduleDailyProgram('show',DAILY_PROGRAM_MS);
+     }
+   },delay);
+ }
  function stopDailyProgramCycle(){
-   if(dailyProgramTimer){clearInterval(dailyProgramTimer);dailyProgramTimer=null}
+   clearDailyProgramTimer();
    hideDailyProgram();
  }
- function startDailyProgramCycle(){
-   stopDailyProgramCycle();
+ function startDailyProgramCycle(options={}){
+   clearDailyProgramTimer();
    if(!dailyEnabled()){
+     hideDailyProgram();
      console.info('UniPop daily program disabled', {screenId,assignment});
      return;
    }
-   // Preload while Local is visible so the switch is instant after one minute.
+   // Preload the daily page once; switching then only hides/shows the local overlay.
    const {frame}=ensureDailyProgramStage();
    const wanted=dailyUrl();
    if(frame.dataset.currentUrl!==wanted){frame.src=wanted;frame.dataset.currentUrl=wanted}
-   hideDailyProgram();
-   console.info('UniPop daily program enabled', {screenId,wanted});
-   dailyProgramTimer=setInterval(()=>{
-     if(!dailyEnabled()){stopDailyProgramCycle();return}
-     if(dailyProgramShowing)hideDailyProgram();else showDailyProgram();
-   },DAILY_PROGRAM_MS);
+   if(options.startOnDaily===true){
+     showDailyProgram();
+     scheduleDailyProgram('hide',DAILY_PROGRAM_MS);
+   }else{
+     hideDailyProgram();
+     scheduleDailyProgram('show',DAILY_PROGRAM_MS);
+   }
+   console.info('UniPop daily program cycle started', {screenId,wanted,startOnDaily:options.startOnDaily===true});
  }
 
  function qr(url){return 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=10&data='+encodeURIComponent(url||UNIPOP_CONFIG.qrFallback)}
@@ -292,7 +320,11 @@
  await loadActiveInjections();runtime=buildRuntime();await play();startDailyProgramCycle();
  // Diagnostic shortcut: append &dailytest=1 to a display URL to force the
  // Tagesprogramm layer immediately, independent of the Builder setting.
- if(qs.get('dailytest')==='1'){assignment.showDailyProgram=true;startDailyProgramCycle();showDailyProgram();}
+ if(qs.get('dailytest')==='1'){
+   assignment.showDailyProgram=true;
+   // Test mode starts on Signage immediately, then MUST return to Local after 60 s.
+   startDailyProgramCycle({startOnDaily:true});
+ }
  const heartbeatMs=Math.max(30,Number(window.UNIPOP_SUPABASE?.heartbeatSeconds)||120)*1000;
  setInterval(()=>{
    if(!current)return;
