@@ -15,16 +15,18 @@
  function qr(url){return 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=10&data='+encodeURIComponent(url||UNIPOP_CONFIG.qrFallback)}
  function freshUrl(url,version){
    if(!url||/^(data:|blob:)/i.test(url))return url||'';
-   // IMPORTANT: never use Date.now() as a fallback here. A changing query string
-   // turns the same Storage object into a new CDN/browser URL on every render and
-   // can create massive cached egress. Only add a cache-buster when the playlist
-   // or injection really has a stable version timestamp.
-   if(!version)return String(url);
+   // IMPORTANT: an uploaded course image already carries its own immutable
+   // ?v=<timestamp> URL. Never append the playlist's publishedAt timestamp to
+   // such a URL: republishing text/layout would otherwise create a brand-new
+   // CDN URL for every image and force the kiosks to download the whole rotation
+   // again. Only use the fallback version when the media URL has no own version.
    try{
      const u=new URL(url,location.href);
-     u.searchParams.set('_ucv',String(version));
+     if(u.searchParams.has('v')||u.searchParams.has('_ucv'))return u.href;
+     if(version)u.searchParams.set('_ucv',String(version));
      return u.href;
    }catch(_){
+     if(/[?&](?:v|_ucv)=/i.test(String(url))||!version)return String(url);
      const sep=String(url).includes('?')?'&':'?';
      return String(url)+sep+'_ucv='+encodeURIComponent(String(version));
    }
@@ -258,7 +260,7 @@
 
  // Self-healing refresh: once per hour the page reloads itself to pick up any
  // newly deployed HTML/JS/CSS build as well. It happens automatically on-site.
- setTimeout(()=>location.reload(),60*60*1000);
+ setTimeout(()=>location.reload(),24*60*60*1000);
  function doPrint(){
  if(assignment.showPrint===false||!current||current.type==='external-image')return;
 
@@ -296,7 +298,9 @@
 
  (async()=>{
    try{
-     const image=current.imageUrl||await UniImageStore.get(c.id)||'';
+     let image=current.imageUrl||current.image||UniHybrid.getRemoteImageUrl(c.id)||'';
+     if(!image)image=await UniImageStore.get(c.id)||'';
+     image=await cachedDisplayImage(image,current.updated_at||current.updatedAt||assignment.publishedAt||'');
      const logoUrl=new URL('assets/images/unipop-logo.png',location.href).href;
      const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({
        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
