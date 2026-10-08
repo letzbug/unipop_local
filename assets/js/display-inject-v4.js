@@ -372,6 +372,7 @@
        const previousDaily=dailyEnabled();
        const previousDailyUrl=dailyUrl();
        assignment=fresh;
+       lastKnownPlaylistVersion=fresh.publishedAt||lastKnownPlaylistVersion;
        try{UniStore.setAssignment(screenId,fresh)}catch(_){}
        if(previousDaily!==dailyEnabled() || previousDailyUrl!==dailyUrl()){
          startDailyProgramCycle();
@@ -391,16 +392,23 @@
      refreshBusy=false;
    }
  }
- // Instant publish trigger: one tiny Realtime broadcast from the Builder makes
- // this display fetch the updated metadata once. Images are still handled by the
- // persistent local cache. If Realtime is unavailable, the 5-minute poll below
- // continues to guarantee eventual synchronization.
- if(window.UniRealtime?.listenDisplay){
-   window.UniRealtime.listenDisplay(screenId,()=>{
-     console.info('UniPop instant publish signal received', {screenId});
-     refreshRemoteContent();
-   });
+ // Lightweight change detector: only fetches the single `updated_at` field once per minute.
+ // This keeps Supabase traffic tiny, while published playlists normally appear within 60 seconds.
+ let lastKnownPlaylistVersion=assignment?.publishedAt||'';
+ async function checkPlaylistVersion(){
+   try{
+     if(!window.UniRemote?.getAssignmentVersion)return;
+     const v=await UniRemote.getAssignmentVersion(screenId);
+     if(v && v!==lastKnownPlaylistVersion){
+       lastKnownPlaylistVersion=v;
+       await refreshRemoteContent();
+     }
+   }catch(e){
+     console.warn('Playlist version check failed; 5-minute fallback remains active.',e);
+   }
  }
+ setInterval(checkPlaylistVersion,60*1000);
+
 
  const remoteRefresh=Math.max(30,Number(window.UNIPOP_SUPABASE?.refreshSeconds)||60);
  setInterval(refreshRemoteContent,remoteRefresh*1000);

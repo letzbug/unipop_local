@@ -93,6 +93,13 @@ window.UniRemote = (function(){
     };
   }
 
+  async function getAssignmentVersion(slug){
+    const rows=await req(
+      'display_playlists?select=updated_at&display_slug=eq.'+esc(slug)+'&limit=1'
+    );
+    return rows?.[0]?.updated_at||'';
+  }
+
   async function setAssignment(slug,payload){
     // Keep optional per-display settings inside the existing JSON `items` field.
     // This avoids any Supabase schema migration and keeps old playlists compatible.
