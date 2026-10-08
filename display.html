@@ -52,6 +52,8 @@
   const scripts=[
     'assets/js/config.js',
     'assets/js/supabase-config.js',
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
+    'assets/js/realtime-sync.js',
     'assets/js/store.js',
     'assets/js/supabase.js',
     'assets/js/hybrid-store.js',
@@ -64,7 +66,7 @@
   for(const src of scripts){
     await new Promise((resolve,reject)=>{
       const s=document.createElement('script');
-      s.src=src+'?ucb='+v;
+      s.src=/^https?:\/\//.test(src)?src:(src+'?ucb='+v);
       s.onload=resolve;
       s.onerror=()=>reject(new Error('Impossible de charger '+src));
       document.body.appendChild(s);

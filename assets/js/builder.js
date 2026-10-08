@@ -648,6 +648,14 @@
 
      activeDisplayId=target;
      await renderDisplayCards();
+
+     // Tiny realtime signal only: no playlist or image data is broadcast.
+     // Running displays fetch the just-saved playlist once immediately;
+     // the normal 5-minute polling remains as a fallback if Realtime is unavailable.
+     if(window.UniRealtime?.notifyDisplay){
+       window.UniRealtime.notifyDisplay(target).catch(err=>console.warn('Instant-Refresh Signal fehlgeschlagen',err));
+     }
+
      alert('Playlist für '+(displays.find(d=>d.id===target)?.name||target)+' gespeichert ('+check.items.length+' Kurse).');
      refreshStats();
    }catch(e){
