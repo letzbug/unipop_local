@@ -607,11 +607,35 @@
    await refreshCampaignPreview();
  };
 
- ['duration','showQR','showPrint','showDailyProgram'].forEach(id=>{
+ // Display options are saved immediately for the active screen.
+ // This does NOT upload images again; it only writes the small playlist/settings payload.
+ let optionSaveTimer=null;
+ async function saveDisplayOptionsNow(){
+   if(!playlist.length) return;
+   const target=$('screenSelect').value||activeDisplayId;
+   if(!target) return;
+   try{
+     const payload=campaignPayload();
+     await UniHybrid.setAssignment(target,payload);
+     activeDisplayId=target;
+     console.info('Display options saved', {target,showQR:payload.showQR,showPrint:payload.showPrint,showDailyProgram:payload.showDailyProgram});
+   }catch(e){
+     console.error('Display option save failed',e);
+   }
+ }
+
+ ['showQR','showPrint','showDailyProgram'].forEach(id=>{
    $(id).addEventListener('change',()=>{
      if(playlist.length) refreshCampaignPreview();
      else updateEditingPreview();
+     clearTimeout(optionSaveTimer);
+     optionSaveTimer=setTimeout(saveDisplayOptionsNow,250);
    });
+ });
+
+ $('duration').addEventListener('change',()=>{
+   if(playlist.length) refreshCampaignPreview();
+   else updateEditingPreview();
  });
 
  $('publish').onclick=async()=>{
