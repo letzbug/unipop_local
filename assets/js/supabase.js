@@ -79,24 +79,40 @@ window.UniRemote = (function(){
     );
     const r=rows?.[0];
     if(!r)return null;
+    const items=Array.isArray(r.items)?r.items:[];
+    const meta=items?.[0]?.__unipopDisplayMeta||{};
     return {
       name:r.name||'UniPop Auswahl',
       duration:Number(r.duration)||14,
       showQR:r.show_qr!==false,
       showPrint:r.show_print!==false,
-      items:Array.isArray(r.items)?r.items:[],
+      showDailyProgram:meta.showDailyProgram===true,
+      dailyProgramUrl:meta.dailyProgramUrl||'https://letzbug.github.io/signage/',
+      items,
       publishedAt:r.updated_at||''
     };
   }
 
   async function setAssignment(slug,payload){
+    // Keep optional per-display settings inside the existing JSON `items` field.
+    // This avoids any Supabase schema migration and keeps old playlists compatible.
+    const items=Array.isArray(payload.items)
+      ? payload.items.map((item,index)=>index===0?{
+          ...item,
+          __unipopDisplayMeta:{
+            ...(item?.__unipopDisplayMeta||{}),
+            showDailyProgram:payload.showDailyProgram===true,
+            dailyProgramUrl:payload.dailyProgramUrl||'https://letzbug.github.io/signage/'
+          }
+        }:item)
+      : [];
     const body={
       display_slug:slug,
       name:payload.name||'UniPop Auswahl',
       duration:Number(payload.duration)||14,
       show_qr:payload.showQR!==false,
       show_print:payload.showPrint!==false,
-      items:payload.items||[],
+      items,
       updated_at:new Date().toISOString()
     };
 

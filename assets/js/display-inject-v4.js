@@ -12,6 +12,55 @@
  }catch(e){console.warn('Remote assignment startup skipped',e)}
  if(!assignment?.items?.length){try{const c=(await UniData.loadCourses())[0];assignment={name:'Auto',items:[{course:c,image:await UniImageStore.get(c.id)||'',displayText:UniData.shorten(c.description,245)}],duration:UNIPOP_CONFIG.slideSeconds,showQR:true,showPrint:true}}catch(e){return}}
 
+ // Optional daily-program alternation, controlled per display from the Builder.
+ // Cycle: 60s UniPop Local -> 60s daily program -> repeat.
+ const DAILY_PROGRAM_DEFAULT_URL='https://letzbug.github.io/signage/';
+ const DAILY_PROGRAM_MS=60*1000;
+ let dailyProgramTimer=null,dailyProgramShowing=false;
+ function ensureDailyProgramStage(){
+   let stage=document.getElementById('dailyProgramStage');
+   let frame=document.getElementById('dailyProgramFrame');
+   if(stage&&frame)return {stage,frame};
+   stage=document.createElement('div');
+   stage.id='dailyProgramStage';
+   Object.assign(stage.style,{position:'fixed',inset:'0',width:'100vw',height:'100vh',zIndex:'2147483647',background:'#000',display:'none',overflow:'hidden',margin:'0',padding:'0'});
+   frame=document.createElement('iframe');
+   frame.id='dailyProgramFrame';
+   frame.title='Tagesprogramm';
+   frame.setAttribute('allow','autoplay; fullscreen');
+   frame.setAttribute('referrerpolicy','no-referrer-when-downgrade');
+   Object.assign(frame.style,{display:'block',width:'100%',height:'100%',border:'0',margin:'0',padding:'0',background:'#000'});
+   stage.appendChild(frame);
+   document.body.appendChild(stage);
+   return {stage,frame};
+ }
+ function hideDailyProgram(){
+   const {stage}=ensureDailyProgramStage();
+   stage.style.display='none';
+   dailyProgramShowing=false;
+ }
+ function showDailyProgram(){
+   const {stage,frame}=ensureDailyProgramStage();
+   const wanted=assignment?.dailyProgramUrl||DAILY_PROGRAM_DEFAULT_URL;
+   if(frame.dataset.currentUrl!==wanted){frame.src=wanted;frame.dataset.currentUrl=wanted}
+   stage.style.display='block';
+   dailyProgramShowing=true;
+ }
+ function stopDailyProgramCycle(){
+   if(dailyProgramTimer){clearInterval(dailyProgramTimer);dailyProgramTimer=null}
+   hideDailyProgram();
+ }
+ function startDailyProgramCycle(){
+   stopDailyProgramCycle();
+   if(assignment?.showDailyProgram!==true)return;
+   // Always begin with UniPop Local for a full minute.
+   hideDailyProgram();
+   dailyProgramTimer=setInterval(()=>{
+     if(assignment?.showDailyProgram!==true){stopDailyProgramCycle();return}
+     if(dailyProgramShowing)hideDailyProgram();else showDailyProgram();
+   },DAILY_PROGRAM_MS);
+ }
+
  function qr(url){return 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=10&data='+encodeURIComponent(url||UNIPOP_CONFIG.qrFallback)}
  function freshUrl(url,version){
    if(!url||/^(data:|blob:)/i.test(url))return url||'';
@@ -208,7 +257,7 @@
    slideTimer=setTimeout(async()=>{idx++;if(idx>=runtime.length){idx=0;runtime=buildRuntime()}await play()},wait*1000);
  }
 
- await loadActiveInjections();runtime=buildRuntime();await play();
+ await loadActiveInjections();runtime=buildRuntime();await play();startDailyProgramCycle();
  const heartbeatMs=Math.max(30,Number(window.UNIPOP_SUPABASE?.heartbeatSeconds)||120)*1000;
  setInterval(()=>{
    if(!current)return;
@@ -238,8 +287,13 @@
      const injectChanged=JSON.stringify(injects||[])!==JSON.stringify(activeInjections||[]);
 
      if(assignmentChanged){
+       const previousDaily=assignment?.showDailyProgram===true;
+       const previousDailyUrl=assignment?.dailyProgramUrl||DAILY_PROGRAM_DEFAULT_URL;
        assignment=fresh;
        try{UniStore.setAssignment(screenId,fresh)}catch(_){}
+       if(previousDaily!==(assignment?.showDailyProgram===true) || previousDailyUrl!==(assignment?.dailyProgramUrl||DAILY_PROGRAM_DEFAULT_URL)){
+         startDailyProgramCycle();
+       }
      }
      if(injectChanged)activeInjections=injects||[];
 

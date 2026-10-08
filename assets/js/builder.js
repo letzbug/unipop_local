@@ -68,6 +68,7 @@
    $('duration').value='14';
    $('showQR').checked=true;
    $('showPrint').checked=true;
+   $('showDailyProgram').checked=false;
    $('search').value='';
    renderPlaylist();
  }
@@ -145,6 +146,7 @@
      $('duration').value=String(a.duration||14);
      $('showQR').checked=a.showQR!==false;
      $('showPrint').checked=a.showPrint!==false;
+     $('showDailyProgram').checked=a.showDailyProgram===true;
      await fillFromPlaylistItem(playlist[0]);
      renderPlaylist();
      await refreshCampaignPreview();
@@ -425,7 +427,9 @@
      items:cleanItems,
      duration:Number($('duration').value)||14,
      showQR:$('showQR').checked,
-     showPrint:$('showPrint').checked
+     showPrint:$('showPrint').checked,
+     showDailyProgram:$('showDailyProgram').checked,
+     dailyProgramUrl:'https://letzbug.github.io/signage/'
    };
  }
  async function editingPayload(){
@@ -435,7 +439,9 @@
        items:[],
        duration:Number($('duration').value)||14,
        showQR:$('showQR').checked,
-       showPrint:$('showPrint').checked
+       showPrint:$('showPrint').checked,
+       showDailyProgram:$('showDailyProgram').checked,
+       dailyProgramUrl:'https://letzbug.github.io/signage/'
      };
    }
 
@@ -448,7 +454,9 @@
      items:[item],
      duration:Number($('duration').value)||14,
      showQR:$('showQR').checked,
-     showPrint:$('showPrint').checked
+     showPrint:$('showPrint').checked,
+     showDailyProgram:$('showDailyProgram').checked,
+     dailyProgramUrl:'https://letzbug.github.io/signage/'
    };
  }
  async function updateEditingPreview(){
@@ -599,7 +607,7 @@
    await refreshCampaignPreview();
  };
 
- ['duration','showQR','showPrint'].forEach(id=>{
+ ['duration','showQR','showPrint','showDailyProgram'].forEach(id=>{
    $(id).addEventListener('change',()=>{
      if(playlist.length) refreshCampaignPreview();
      else updateEditingPreview();
